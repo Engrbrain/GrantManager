@@ -5,10 +5,6 @@ VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenGrantsManager", "ZenGrantsManager\ZenGrantsManager.csproj", "{EAC71510-B6ED-4BE1-9A1A-2680A60B65CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenGrantService", "ZenGrantService\ZenGrantService.csproj", "{D03A4098-7F00-4AA2-9040-FB16A8647B9D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenGrantManagerApp", "ZenGrantManagerApp\ZenGrantManagerApp.csproj", "{FDA61B4C-0F61-4043-84A7-F45FC9E45C28}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,16 +15,6 @@ Global
 		{EAC71510-B6ED-4BE1-9A1A-2680A60B65CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAC71510-B6ED-4BE1-9A1A-2680A60B65CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAC71510-B6ED-4BE1-9A1A-2680A60B65CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D03A4098-7F00-4AA2-9040-FB16A8647B9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D03A4098-7F00-4AA2-9040-FB16A8647B9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D03A4098-7F00-4AA2-9040-FB16A8647B9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D03A4098-7F00-4AA2-9040-FB16A8647B9D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FDA61B4C-0F61-4043-84A7-F45FC9E45C28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FDA61B4C-0F61-4043-84A7-F45FC9E45C28}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FDA61B4C-0F61-4043-84A7-F45FC9E45C28}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{FDA61B4C-0F61-4043-84A7-F45FC9E45C28}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FDA61B4C-0F61-4043-84A7-F45FC9E45C28}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FDA61B4C-0F61-4043-84A7-F45FC9E45C28}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
