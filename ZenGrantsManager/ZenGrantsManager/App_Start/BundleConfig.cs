@@ -30,6 +30,14 @@ namespace ZenGrantsManager
             // jQueryUI 
             bundles.Add(new StyleBundle("~/bundles/jqueryui").Include(
                         "~/Scripts/plugins/jquery-ui/jquery-ui.min.js"));
+            //jQueryVal
+            bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
+                        "~/Scripts/jquery.unobtrusive*",
+                        "~/Scripts/jquery.validate*"));
+
+           
+
+
 
             // Bootstrap
             bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
@@ -236,13 +244,7 @@ namespace ZenGrantsManager
             bundles.Add(new ScriptBundle("~/plugins/summernote").Include(
                       "~/Scripts/plugins/summernote/summernote.min.js"));
 
-            // toastr notification 
-            bundles.Add(new ScriptBundle("~/plugins/toastr").Include(
-                      "~/Scripts/plugins/toastr/toastr.min.js"));
-
-            // toastr notification styles
-            bundles.Add(new StyleBundle("~/plugins/toastrStyles").Include(
-                      "~/Content/plugins/toastr/toastr.min.css"));
+           
 
             // color picker
             bundles.Add(new ScriptBundle("~/plugins/colorpicker").Include(
@@ -409,8 +411,6 @@ namespace ZenGrantsManager
             bundles.Add(new ScriptBundle("~/plugins/markdown").Include(
                       "~/Scripts/plugins/bootstrap-markdown/bootstrap-markdown.js",
                       "~/Scripts/plugins/bootstrap-markdown/markdown.js"));
-
-
 
         }
     }

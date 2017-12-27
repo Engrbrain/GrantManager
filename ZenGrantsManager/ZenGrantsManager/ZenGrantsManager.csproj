@@ -170,12 +170,49 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\Landing\LandingController.cs" />
-    <Compile Include="Controllers\OrganizationController.cs" />
+    <Compile Include="Controllers\OrganizationsController.cs" />
+    <Compile Include="Controllers\UserManagement\LoginController.cs" />
+    <Compile Include="Controllers\UserManagement\ManageUserController.cs" />
+    <Compile Include="Extensions\ExtendGrant.cs" />
+    <Compile Include="Extensions\NotificationExtensions.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\HMTLHelperExtensions.cs" />
+    <Compile Include="Models\ActivityDocument.cs" />
+    <Compile Include="Models\ActivityRisk.cs" />
+    <Compile Include="Models\ApplicationDocument.cs" />
+    <Compile Include="Models\Assessor.cs" />
+    <Compile Include="Models\BudgetTemplate.cs" />
+    <Compile Include="Models\CustomApplicationDetails.cs" />
+    <Compile Include="Models\enumManager.cs" />
+    <Compile Include="Models\FocusArea.cs" />
+    <Compile Include="Models\Login.cs" />
+    <Compile Include="Models\MeetingAttendance.cs" />
+    <Compile Include="Models\ProgApplication.cs" />
+    <Compile Include="Models\Programme.cs" />
+    <Compile Include="Models\Project.cs" />
+    <Compile Include="Models\ProjectActivity.cs" />
+    <Compile Include="Models\ProjectActivityComment.cs" />
+    <Compile Include="Models\ProjectBudget.cs" />
+    <Compile Include="Models\ProjectComment.cs" />
+    <Compile Include="Models\ProjectDocument.cs" />
+    <Compile Include="Models\ProjectMeeting.cs" />
+    <Compile Include="Models\ProjectRisk.cs" />
+    <Compile Include="Models\ProjectTeam.cs" />
+    <Compile Include="Models\ProjectTemplate.cs" />
+    <Compile Include="Models\ProjectTransactionHeader.cs" />
+    <Compile Include="Models\ProjectTransactionLine.cs" />
+    <Compile Include="Models\ProposalTemplate.cs" />
+    <Compile Include="Models\Register.cs" />
     <Compile Include="Models\Organization.cs" />
+    <Compile Include="Models\Renewal.cs" />
+    <Compile Include="Models\RoleBindingModels.cs" />
+    <Compile Include="Models\SelectionAnswer.cs" />
+    <Compile Include="Models\SelectionCategory.cs" />
+    <Compile Include="Models\SelectionQuestion.cs" />
+    <Compile Include="Models\Subscription.cs" />
+    <Compile Include="Models\ZenGrantsManagerContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -294,7 +331,6 @@
     <Content Include="Content\plugins\summernote\summernote.css" />
     <Content Include="Content\plugins\sweetalert\sweetalert.css" />
     <Content Include="Content\plugins\switchery\switchery.css" />
-    <Content Include="Content\plugins\toastr\toastr.min.css" />
     <Content Include="Content\plugins\touchspin\jquery.bootstrap-touchspin.min.css" />
     <Content Include="Content\style.css" />
     <Content Include="favicon.ico" />
@@ -1682,7 +1718,6 @@
     <Content Include="Scripts\plugins\sweetalert\sweetalert.min.js" />
     <Content Include="Scripts\plugins\switchery\switchery.js" />
     <Content Include="Scripts\plugins\tinycon\tinycon.min.js" />
-    <Content Include="Scripts\plugins\toastr\toastr.min.js" />
     <Content Include="Scripts\plugins\touchspin\jquery.bootstrap-touchspin.min.js" />
     <Content Include="Scripts\plugins\validate\jquery.validate.min.js" />
     <Content Include="Scripts\plugins\velocity\velocity.min.js" />
@@ -1690,6 +1725,7 @@
     <Content Include="Scripts\plugins\video\responsible-video.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
+    <Content Include="testservices.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -1723,10 +1759,19 @@
     <Content Include="Scripts\plugins\chartist\chartist.min.js.map" />
     <Content Include="Scripts\plugins\diff_match_patch\COPYING" />
     <Content Include="Scripts\plugins\justified-gallery\README.md" />
-    <Content Include="Views\Organization\Index.cshtml" />
+    <Content Include="Views\Shared\_Notifications.cshtml" />
+    <Content Include="Views\ManageUser\Register.cshtml" />
+    <Content Include="Views\Login\Index.cshtml" />
+    <Content Include="Views\Organizations\Create.cshtml" />
+    <Content Include="Views\Organizations\Delete.cshtml" />
+    <Content Include="Views\Organizations\Details.cshtml" />
+    <Content Include="Views\Organizations\Edit.cshtml" />
+    <Content Include="Views\Organizations\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\uploads\" />
+    <Folder Include="Views\ManageUsers\" />
+    <Folder Include="Views\utility\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />

@@ -1,0 +1,106 @@
+﻿@model ZenGrantsManager.Models.Organization
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Organization</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgAddress)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgAddress)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgState)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgState)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgCountry)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgCountry)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgPhone)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgPhone)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgEmail)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgEmail)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgWebsite)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgWebsite)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrgLogo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrgLogo)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.ID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>
