@@ -11,7 +11,7 @@ using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class AssessorsController : Controller
+    public class AssessorsController : mybaseController
     {
         public string token = String.Empty;
         public string userID = String.Empty;
@@ -99,27 +99,7 @@ namespace ZenGrantsManager.Controllers
             token = (string)(Session["accessToken"]);
             string userID = (string)(Session["UserID"]);
             #endregion
-
-
-            //Get Organization to select List
-            List<Organization> organization = new List<Organization>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName");
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
 
             return View();
         }
@@ -164,25 +144,7 @@ namespace ZenGrantsManager.Controllers
 
                 }
             }
-            List<Organization> organization = new List<Organization>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", assessor.OrganizationID);
-
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, assessor.OrganizationID);
             return View(assessor);
         }
 
@@ -222,25 +184,7 @@ namespace ZenGrantsManager.Controllers
 
             }
 
-            List<Organization> organization = new List<Organization>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", myAssessor.OrganizationID);
-
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myAssessor.OrganizationID);
 
             return View(myAssessor);
 
@@ -277,25 +221,7 @@ namespace ZenGrantsManager.Controllers
                 }
             }
 
-            List<Organization> organization = new List<Organization>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", assessor.OrganizationID);
-
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, assessor.OrganizationID);
             return View(assessor);
         }
 

@@ -11,7 +11,7 @@ using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class CustomApplicationDetailsController : Controller
+    public class CustomApplicationDetailsController : mybaseController
     {
         public string token = String.Empty;
         public string userID = String.Empty;
@@ -46,7 +46,7 @@ namespace ZenGrantsManager.Controllers
                 else
                 {
                     this.AddNotification("Custom Application Details could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                    return View(budgetTemplate);
+                    return View(customApplicationDetails);
                 }
 
             }
@@ -100,86 +100,10 @@ namespace ZenGrantsManager.Controllers
             token = (string)(Session["accessToken"]);
             string userID = (string)(Session["UserID"]);
             #endregion
-            //Get Organization to select List
-            List<Organization> organization = new List<Organization>();
-            List<ProgApplication> progapplication = new List<ProgApplication>();
-            List<Programme> programme = new List<Programme>();
-            List<ProposalTemplate> proposalTemplate = new List<ProposalTemplate>();
-
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName");
-                }
-
-
-            }
-
-            // Get Programme Application Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgApplicationSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ApplicantName");
-                }
-
-
-            }
-
-            // Get Programme  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgrammeSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ProgrammeName");
-                }
-
-
-            }
-
-            // Get Proposal Template  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProposalTemplateSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "FieldLabel");
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.ProposalTemplateID = await ProposalTemplateSelectList(token);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectList(token);
+            ViewBag.ProgrammeID = await ProgrammeSelectList(token);
             return View();
         }
 
@@ -222,86 +146,10 @@ namespace ZenGrantsManager.Controllers
 
                 }
             }
-            List<Organization> organization = new List<Organization>();
-            List<ProgApplication> progapplication = new List<ProgApplication>();
-            List<Programme> programme = new List<Programme>();
-            List<ProposalTemplate> proposalTemplate = new List<ProposalTemplate>();
-
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", customApplicationDetails.OrganizationID);
-
-                }
-
-
-            }
-
-            // Get Programme Application Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgApplicationSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ApplicantName", customApplicationDetails.ProgApplicationID);
-                }
-
-
-            }
-
-            // Get Programme  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgrammeSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ProgrammeName", customApplicationDetails.ProgrammeID);
-                }
-
-
-            }
-
-            // Get Proposal Template  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProposalTemplateSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "FieldLabel", customApplicationDetails.ProposalTemplateID);
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, customApplicationDetails.OrganizationID);
+            ViewBag.ProposalTemplateID = await ProposalTemplateSelectListByModel(token, customApplicationDetails.ProposalTemplateID);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectListByModel(token, customApplicationDetails.ProgApplicationID);
+            ViewBag.ProgrammeID = await ProgrammeSelectListByModel(token, customApplicationDetails.ProgrammeID);
 
             return View(customApplicationDetails);
         }
@@ -341,85 +189,10 @@ namespace ZenGrantsManager.Controllers
                 }
 
             }
-
-            List<Organization> organization = new List<Organization>();
-            List<ProgApplication> progapplication = new List<ProgApplication>();
-            List<Programme> programme = new List<Programme>();
-            List<ProposalTemplate> proposalTemplate = new List<ProposalTemplate>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", myCustomApplicationDetails.OrganizationID);
-
-                }
-
-
-            }
-            // Get Programme Application Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgApplicationSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ApplicantName", myCustomApplicationDetails.ProgApplicationID);
-                }
-
-
-            }
-
-            // Get Programme  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgrammeSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ProgrammeName", myCustomApplicationDetails.ProgrammeID);
-                }
-
-
-            }
-
-            // Get Proposal Template  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProposalTemplateSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "FieldLabel", myCustomApplicationDetails.ProposalTemplateID);
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myCustomApplicationDetails.OrganizationID);
+            ViewBag.ProposalTemplateID = await ProposalTemplateSelectListByModel(token, myCustomApplicationDetails.ProposalTemplateID);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectListByModel(token, myCustomApplicationDetails.ProgApplicationID);
+            ViewBag.ProgrammeID = await ProgrammeSelectListByModel(token, myCustomApplicationDetails.ProgrammeID);
 
             return View(myCustomApplicationDetails);
         }
@@ -439,7 +212,7 @@ namespace ZenGrantsManager.Controllers
                     client.DefaultRequestHeaders.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/CustomApplicationDetails/{assessor.ID}", assessor);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/CustomApplicationDetails/{customApplicationDetails.ID}", customApplicationDetails);
                     if (Res.IsSuccessStatusCode)
                     {
                         this.AddNotification("Custom Application Details information modified successfully", NotificationType.SUCCESS);
@@ -455,84 +228,10 @@ namespace ZenGrantsManager.Controllers
                 }
             }
 
-            List<Organization> organization = new List<Organization>();
-            List<ProgApplication> progapplication = new List<ProgApplication>();
-            List<Programme> programme = new List<Programme>();
-            List<ProposalTemplate> proposalTemplate = new List<ProposalTemplate>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", customApplicationDetails.OrganizationID);
-
-                }
-
-
-            }
-            // Get Programme Application Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgApplicationSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ApplicantName", customApplicationDetails.ProgApplicationID);
-                }
-
-
-            }
-
-            // Get Programme  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProgrammeSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "ProgrammeName", customApplicationDetails.ProgrammeID);
-                }
-
-
-            }
-
-            // Get Proposal Template  Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProposalTemplateSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProAppResponse = Res.Content.ReadAsStringAsync().Result;
-                    progapplication = JsonConvert.DeserializeObject<List<ProgApplication>>(ProAppResponse);
-                    ViewBag.ProjectActivityID = new SelectList(progapplication, "ID", "FieldLabel", customApplicationDetails.ProposalTemplateID);
-                }
-
-
-            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, customApplicationDetails.OrganizationID);
+            ViewBag.ProposalTemplateID = await ProposalTemplateSelectListByModel(token, customApplicationDetails.ProposalTemplateID);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectListByModel(token, customApplicationDetails.ProgApplicationID);
+            ViewBag.ProgrammeID = await ProgrammeSelectListByModel(token, customApplicationDetails.ProgrammeID);
             return View(customApplicationDetails);
         }
 

@@ -1,45 +1,104 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
 using System.Net;
-using System.Web;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class FocusAreasController : Controller
+    public class FocusAreasController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
 
         // GET: FocusAreas
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var focusAreas = db.FocusAreas.Include(f => f.Organization);
-            return View(focusAreas.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            List<Assessor> assessor = new List<Assessor>();
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/FocusAreas");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var assessorsResponse = Res.Content.ReadAsStringAsync().Result;
+                    assessor = JsonConvert.DeserializeObject<List<Assessor>>(assessorsResponse);
+                    return View(assessor);
+                }
+                else
+                {
+                    this.AddNotification("Focus Areas could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(assessor);
+                }
+
+            }
         }
 
         // GET: FocusAreas/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            FocusArea focusArea = db.FocusAreas.Find(id);
-            if (focusArea == null)
+            List<FocusArea> focusArea = new List<FocusArea>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/FocusAreas/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var focusAreaResponse = Res.Content.ReadAsStringAsync().Result;
+                    FocusArea myFocusArea = JsonConvert.DeserializeObject<FocusArea>(focusAreaResponse);
+                    return View(myFocusArea);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Focus Area information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(focusArea);
         }
 
         // GET: FocusAreas/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
             return View();
         }
 
@@ -48,33 +107,82 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,FocusAreaName,FocusAreaDesc,OrganizationID,CreatedDate,isActive,TimeStamp,UserId")] FocusArea focusArea)
+        public async Task<ActionResult> Create([Bind(Include = "ID,FocusAreaName,FocusAreaDesc,OrganizationID,CreatedDate,isActive,TimeStamp,UserId")] FocusArea focusArea)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (ModelState.IsValid)
             {
-                db.FocusAreas.Add(focusArea);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                focusArea.CreatedDate = DateTime.Now;
+                focusArea.UserId = userID;
+                focusArea.TimeStamp = DateTime.Now;
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", focusArea.OrganizationID);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/FocusAreas", focusArea);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Focus Area created successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Focus Area cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
+            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, focusArea.OrganizationID);
             return View(focusArea);
         }
 
         // GET: FocusAreas/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            FocusArea focusArea = db.FocusAreas.Find(id);
-            if (focusArea == null)
+            List<FocusArea> focusArea = new List<FocusArea>();
+            FocusArea myFocusArea = new FocusArea();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/FocusAreas/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var focusAreaResponse = Res.Content.ReadAsStringAsync().Result;
+                    myFocusArea = JsonConvert.DeserializeObject<FocusArea>(focusAreaResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Focus Area information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", focusArea.OrganizationID);
-            return View(focusArea);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myFocusArea.OrganizationID);
+
+            return View(myFocusArea);
         }
 
         // POST: FocusAreas/Edit/5
@@ -82,51 +190,105 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,FocusAreaName,FocusAreaDesc,OrganizationID,CreatedDate,isActive,TimeStamp,UserId")] FocusArea focusArea)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,FocusAreaName,FocusAreaDesc,OrganizationID,CreatedDate,isActive,TimeStamp,UserId")] FocusArea focusArea)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(focusArea).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/FocusAreas/{focusArea.ID}", focusArea);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Focus Area information modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Focus Area information cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", focusArea.OrganizationID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, focusArea.OrganizationID);
+
             return View(focusArea);
         }
 
         // GET: FocusAreas/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            FocusArea focusArea = db.FocusAreas.Find(id);
-            if (focusArea == null)
+            List<FocusArea> focusArea = new List<FocusArea>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/FocusAreas/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var focusAreaResponse = Res.Content.ReadAsStringAsync().Result;
+                    FocusArea myFocusArea = JsonConvert.DeserializeObject<FocusArea>(focusAreaResponse);
+                    return View(myFocusArea);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Focus Area information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(focusArea);
         }
 
         // POST: FocusAreas/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            FocusArea focusArea = db.FocusAreas.Find(id);
-            db.FocusAreas.Remove(focusArea);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/FocusAreas/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Focus Area deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Focus Area  cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
     }
 }

@@ -22,11 +22,8 @@ namespace ZenGrantsManager.Models
         public enumManager.AttendanceStatus AttendanceStatus { get; set; }
         public int ProjectMeetingID { get; set; }
         public virtual ProjectMeeting ProjectMeeting { get; set; }
-
         public int ProjectID { get; set; }
         public virtual Project Project { get; set; }
-        public int? ProjectTeamID { get; set; }
-        public virtual Project ProjectTeam { get; set; }
         public DateTime CreatedDate { get; set; }
         public bool isDeleted { get; set; }
         public DateTime TimeStamp { get; set; }

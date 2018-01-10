@@ -178,6 +178,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\Landing\LandingController.cs" />
     <Compile Include="Controllers\MeetingAttendancesController.cs" />
+    <Compile Include="Controllers\mybaseController.cs" />
     <Compile Include="Controllers\OrganizationsController.cs" />
     <Compile Include="Controllers\ProgApplicationsController.cs" />
     <Compile Include="Controllers\ProgrammesController.cs" />
@@ -1942,6 +1943,7 @@
     <Folder Include="DocumentManagement\ApplicationDocument\" />
     <Folder Include="DocumentManagement\ProjectActivityDocument\" />
     <Folder Include="Views\ManageUsers\" />
+    <Folder Include="Views\mybase\" />
     <Folder Include="Views\utility\" />
   </ItemGroup>
   <ItemGroup>

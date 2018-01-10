@@ -15,7 +15,7 @@ using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class ActivityRisksController : Controller
+    public class ActivityRisksController : mybaseController
     {
         public string token = String.Empty;
         public string userID = String.Empty;
@@ -98,46 +98,8 @@ namespace ZenGrantsManager.Controllers
             token = (string)(Session["accessToken"]);
             string userID = (string)(Session["UserID"]);
             #endregion
-            //Get Organization to select List
-            List<Organization> organization = new List<Organization>();
-            List<ProjectActivity> projectactivity = new List<ProjectActivity>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName");
-                }
-
-
-            }
-
-            // Get Project Activity Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProActSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProActResponse = Res.Content.ReadAsStringAsync().Result;
-                    projectactivity = JsonConvert.DeserializeObject<List<ProjectActivity>>(ProActResponse);
-                    ViewBag.ProjectActivityID = new SelectList(projectactivity, "ID", "ActivityTitle");
-                }
-
-
-            }
-            
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.ProjectActivityID = await ProjectActivitySelectList(token);
             return View();
         }
 
@@ -175,48 +137,9 @@ namespace ZenGrantsManager.Controllers
 
                 }
             }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, activityRisk.OrganizationID);
+            ViewBag.ProjectActivityID = await ProjectActivitySelectListByModel(token, activityRisk.ProjectActivityID);
 
-
-            List<Organization> organization = new List<Organization>();
-            List<ProjectActivity> projectactivity = new List<ProjectActivity>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", activityRisk.OrganizationID);
-
-                }
-
-
-            }
-
-            // Get Project Activity Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProActSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProActResponse = Res.Content.ReadAsStringAsync().Result;
-                    projectactivity = JsonConvert.DeserializeObject<List<ProjectActivity>>(ProActResponse);
-                    ViewBag.ProjectActivityID = new SelectList(projectactivity, "ID", "ActivityTitle", activityRisk.ProjectActivityID);
-
-                }
-
-
-            }
             return View(activityRisk);
         }
 
@@ -255,48 +178,9 @@ namespace ZenGrantsManager.Controllers
                 }
 
             }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myActivityRisk.OrganizationID);
+            ViewBag.ProjectActivityID = await ProjectActivitySelectListByModel(token, myActivityRisk.ProjectActivityID);
 
-            //Get Organization to select List
-            List<Organization> organization = new List<Organization>();
-            List<ProjectActivity> projectactivity = new List<ProjectActivity>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", myActivityRisk.OrganizationID);
-
-                }
-
-
-            }
-
-            // Get Project Activity Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProActSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProActResponse = Res.Content.ReadAsStringAsync().Result;
-                    projectactivity = JsonConvert.DeserializeObject<List<ProjectActivity>>(ProActResponse);
-                    ViewBag.ProjectActivityID = new SelectList(projectactivity, "ID", "ActivityTitle", myActivityRisk.ProjectActivityID);
-
-                }
-
-
-            }
 
             return View(myActivityRisk);
         }
@@ -332,47 +216,9 @@ namespace ZenGrantsManager.Controllers
 
                 }
             }
-            //Get Organization to select List
-            List<Organization> organization = new List<Organization>();
-            List<ProjectActivity> projectactivity = new List<ProjectActivity>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, activityRisk.OrganizationID);
+            ViewBag.ProjectActivityID = await ProjectActivitySelectListByModel(token, activityRisk.ProjectActivityID);
 
-                HttpResponseMessage Res = await client.GetAsync("GetOrgSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var OrgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(OrgResponse);
-                    ViewBag.OrganizationID = new SelectList(organization, "ID", "OrgName", activityRisk.OrganizationID);
-
-                }
-
-
-            }
-
-            // Get Project Activity Select List
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProActSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProActResponse = Res.Content.ReadAsStringAsync().Result;
-                    projectactivity = JsonConvert.DeserializeObject<List<ProjectActivity>>(ProActResponse);
-                    ViewBag.ProjectActivityID = new SelectList(projectactivity, "ID", "ActivityTitle", activityRisk.ProjectActivityID);
-
-                }
-
-
-            }
             return View(activityRisk);
         }
 
