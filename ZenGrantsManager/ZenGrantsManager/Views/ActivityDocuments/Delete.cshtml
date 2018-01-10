@@ -1,0 +1,96 @@
+﻿@model ZenGrantsManager.Models.ActivityDocument
+
+@{
+    ViewBag.Title = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>ActivityDocument</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectActivity.ActivityTitle)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectActivity.ActivityTitle)
+        </dd>
+
+        <dt>
+           Download Document
+        </dt>
+
+        <dd>
+            <a href="@Html.Raw(Model.LocalFilePath)">Download Document</a>
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DocumentDescription)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DocumentDescription)
+        </dd>
+
+        <dt>
+         Download Documents
+        </dt>
+
+        <dd>
+            <a href="@Html.Raw(Model.LocalFilePath)">Download Document</a>
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.UserId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.UserId)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Back to List", "Index")
+        </div>
+    }
+</div>

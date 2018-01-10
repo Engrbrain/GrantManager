@@ -1,0 +1,160 @@
+﻿@model ZenGrantsManager.Models.Project
+
+@{
+    ViewBag.Title = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>Project</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProgApplication.ApplicantReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProgApplication.ApplicantReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Programme.ProgrammeName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Programme.ProgrammeName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectDescription)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectDescription)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProgrammeDesc)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProgrammeDesc)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectStartDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectStartDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectDueDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectDueDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectContigencyPeriod)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectContigencyPeriod)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.AmountAllocated)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.AmountAllocated)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.BalanceAmount)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.BalanceAmount)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectStatus)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectStatus)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectLogo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectLogo)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Back to List", "Index")
+        </div>
+    }
+</div>

@@ -1,0 +1,128 @@
+﻿@model ZenGrantsManager.Models.ProjectMeeting
+
+@{
+    ViewBag.Title = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>ProjectMeeting</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Project.ProjectReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Project.ProjectReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MeetingTitle)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MeetingTitle)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MeetingDetails)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MeetingDetails)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MeetingPurpose)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MeetingPurpose)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MeetingMedium)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MeetingMedium)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DiscussionSummary)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DiscussionSummary)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MeetingMinutes)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MeetingMinutes)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MeetingStatus)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MeetingStatus)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.UserId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.UserId)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Back to List", "Index")
+        </div>
+    }
+</div>

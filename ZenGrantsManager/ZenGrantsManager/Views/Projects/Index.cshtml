@@ -1,0 +1,129 @@
+﻿@model IEnumerable<ZenGrantsManager.Models.Project>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProgApplication.ApplicantReference)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Programme.ProgrammeName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectReference)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectDescription)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProgrammeDesc)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectStartDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectDueDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectContigencyPeriod)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.AmountAllocated)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.BalanceAmount)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectStatus)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectLogo)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Organization.OrgName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProgApplication.ApplicantReference)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Programme.ProgrammeName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectReference)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectDescription)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProgrammeDesc)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectStartDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectDueDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectContigencyPeriod)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.AmountAllocated)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.BalanceAmount)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectStatus)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CreatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.isDeleted)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TimeStamp)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectLogo)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.ID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.ID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.ID })
+        </td>
+    </tr>
+}
+
+</table>

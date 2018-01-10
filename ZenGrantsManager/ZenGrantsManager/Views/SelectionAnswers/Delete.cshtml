@@ -1,0 +1,88 @@
+﻿@model ZenGrantsManager.Models.SelectionAnswer
+
+@{
+    ViewBag.Title = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>SelectionAnswer</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProgApplication.ApplicantReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProgApplication.ApplicantReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.SelectionQuestion.Question)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.SelectionQuestion.Question)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.AssesorID)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.AssesorID)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.AssignedScore)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.AssignedScore)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Back to List", "Index")
+        </div>
+    }
+</div>

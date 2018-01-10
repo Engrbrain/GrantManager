@@ -14,9 +14,7 @@
         <th>
             @Html.DisplayNameFor(model => model.OrgName)
         </th>
-        <th>
-            @Html.DisplayNameFor(model => model.OrgAddress)
-        </th>
+        
         <th>
             @Html.DisplayNameFor(model => model.OrgState)
         </th>
@@ -29,18 +27,11 @@
         <th>
             @Html.DisplayNameFor(model => model.OrgEmail)
         </th>
-        <th>
-            @Html.DisplayNameFor(model => model.OrgWebsite)
-        </th>
+       
         <th>
             @Html.DisplayNameFor(model => model.CreatedDate)
         </th>
-        <th>
-            @Html.DisplayNameFor(model => model.isDeleted)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.TimeStamp)
-        </th>
+       
         <th>
             @Html.DisplayNameFor(model => model.OrgLogo)
         </th>
@@ -52,9 +43,7 @@
         <td>
             @Html.DisplayFor(modelItem => item.OrgName)
         </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.OrgAddress)
-        </td>
+        
         <td>
             @Html.DisplayFor(modelItem => item.OrgState)
         </td>
@@ -67,20 +56,12 @@
         <td>
             @Html.DisplayFor(modelItem => item.OrgEmail)
         </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.OrgWebsite)
-        </td>
+        
         <td>
             @Html.DisplayFor(modelItem => item.CreatedDate)
         </td>
         <td>
-            @Html.DisplayFor(modelItem => item.isDeleted)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.TimeStamp)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.OrgLogo)
+            <img src="@Url.Action("RetrieveImage", "Organizations", new { item.ID })" alt="Organization Logo" height=30 width=30/>
         </td>
         <td>
             @Html.ActionLink("Edit", "Edit", new { id=item.ID }) |

@@ -1,0 +1,82 @@
+﻿@model ZenGrantsManager.Models.ApplicationDocument
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>ApplicationDocument</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProgApplication.ApplicantReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProgApplication.ApplicantReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DocumentName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DocumentName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DocumentDescription)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DocumentDescription)
+        </dd>
+
+        <dt>
+           Download Document
+        </dt>
+
+        <dd>
+            <a href="@Html.Raw(Model.LocalFilePath)">Download Document</a>
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.ID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

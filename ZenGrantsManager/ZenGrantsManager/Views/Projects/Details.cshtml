@@ -1,0 +1,154 @@
+﻿@model ZenGrantsManager.Models.Project
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Project</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProgApplication.ApplicantReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProgApplication.ApplicantReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Programme.ProgrammeName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Programme.ProgrammeName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectDescription)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectDescription)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProgrammeDesc)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProgrammeDesc)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectStartDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectStartDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectDueDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectDueDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectContigencyPeriod)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectContigencyPeriod)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.AmountAllocated)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.AmountAllocated)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.BalanceAmount)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.BalanceAmount)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectStatus)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectStatus)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectLogo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectLogo)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.ID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

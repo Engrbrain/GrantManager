@@ -1,0 +1,105 @@
+﻿@model IEnumerable<ZenGrantsManager.Models.ProjectMeeting>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Project.ProjectReference)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MeetingTitle)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MeetingDetails)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MeetingPurpose)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MeetingMedium)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DiscussionSummary)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MeetingMinutes)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MeetingStatus)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.UserId)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Organization.OrgName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Project.ProjectReference)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MeetingTitle)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MeetingDetails)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MeetingPurpose)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MeetingMedium)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.DiscussionSummary)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MeetingMinutes)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MeetingStatus)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CreatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.isDeleted)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TimeStamp)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.UserId)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.ID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.ID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.ID })
+        </td>
+    </tr>
+}
+
+</table>

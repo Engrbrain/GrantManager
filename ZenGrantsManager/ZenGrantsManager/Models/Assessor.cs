@@ -21,8 +21,7 @@ namespace ZenGrantsManager.Models
         public DateTime CreatedDate { get; set; }
         public bool isDeleted { get; set; }
         public DateTime TimeStamp { get; set; }
-        
-       
+        public string UserId { get; set; }
 
         public Assessor()
         {

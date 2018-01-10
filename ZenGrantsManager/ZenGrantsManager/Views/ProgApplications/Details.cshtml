@@ -1,0 +1,138 @@
+﻿@model ZenGrantsManager.Models.ProgApplication
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>ProgApplication</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Assessor.AssessorCode)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Assessor.AssessorCode)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Programme.ProgrammeName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Programme.ProgrammeName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ApplicantReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ApplicantReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ApplicantName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ApplicantName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ApplicantPhoneNumber)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ApplicantPhoneNumber)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ApplicantEmailAddress)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ApplicantEmailAddress)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ApplicationSummary)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ApplicationSummary)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Proposal)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Proposal)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ApplicantPhoto)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ApplicantPhoto)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Applicationscore)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Applicationscore)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.applicationStatus)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.applicationStatus)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.ID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

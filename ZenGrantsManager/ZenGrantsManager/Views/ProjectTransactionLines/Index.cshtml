@@ -1,0 +1,81 @@
+﻿@model IEnumerable<ZenGrantsManager.Models.ProjectTransactionLine>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProjectTransactionHeader.TransactionRef)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TransactionRef)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LineNumber)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Narration)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LineAmount)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Organization.OrgName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProjectTransactionHeader.TransactionRef)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TransactionRef)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.LineNumber)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Narration)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.LineAmount)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CreatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.isDeleted)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TimeStamp)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.ID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.ID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.ID })
+        </td>
+    </tr>
+}
+
+</table>

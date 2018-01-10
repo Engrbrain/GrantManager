@@ -1,0 +1,130 @@
+﻿@model ZenGrantsManager.Models.ProjectTransactionHeader
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>ProjectTransactionHeader</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Organization.OrgName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Project.ProjectReference)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Project.ProjectReference)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ProjectBudget.BudgetItem)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProjectBudget.BudgetItem)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TransactionRef)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TransactionRef)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ShortText)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ShortText)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.FiscalYear)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.FiscalYear)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Period)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Period)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TransactionDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TransactionDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.EntryDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.EntryDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TotalAmount)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TotalAmount)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.isDeleted)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TimeStamp)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.UserId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.UserId)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.ID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

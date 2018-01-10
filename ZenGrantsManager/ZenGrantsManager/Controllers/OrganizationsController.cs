@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using ZenGrantsManager.Extensions;
+using System.IO;
 
 namespace ZenGrantsManager.Controllers
 {
@@ -21,143 +22,49 @@ namespace ZenGrantsManager.Controllers
     {
         public string token = String.Empty;
         public string userID = String.Empty;
-        string baseurl = "http://localhost:49122/";
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
         // GET: Organizations
+        [HttpGet]
+        [SessionTimeout]
         public async Task<ActionResult> Index()
         {
             #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    string useridsession = (string)(Session["UserID"]);
-                    if (!string.IsNullOrEmpty(useridsession))
-                    {
-                        userID = (string)(Session["UserID"]);
-                    }
-                    else
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
-                    }
-                }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
-
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
             #endregion
             List<Organization> organization = new List<Organization>();
          
 
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                
-                HttpResponseMessage Res = await client.GetAsync("api/Organizations");
-                if (Res.IsSuccessStatusCode)
-                {  
-                    var orgResponse = Res.Content.ReadAsStringAsync().Result;  
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(orgResponse);
-                    return View(organization);
-                }
-                else
+                using (var client = new HttpClient())
                 {
-                     this.AddNotification("Organization List could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                    return View(organization);
-                }
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 
-            }
-        }
-            // GET: Organizations/Details/5
-            public async Task<ActionResult> Details(int? id)
-        {
-            #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    if (!string.IsNullOrEmpty(Session["UserID"].ToString()))
-                    {
-                        userID = (string)(Session["UserID"]);
-
+                    HttpResponseMessage Res = await client.GetAsync("api/Organizations");
+                    if (Res.IsSuccessStatusCode)
+                    {  
+                        var orgResponse = Res.Content.ReadAsStringAsync().Result;  
+                        organization = JsonConvert.DeserializeObject<List<Organization>>(orgResponse);
+                        return View(organization);
                     }
                     else
                     {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
+                         this.AddNotification("Organization List could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                        return View(organization);
                     }
+                
                 }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
-
+        }
+        // GET: Organizations/Details/5
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
+        {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
             #endregion
             if (id == null)
             {
@@ -176,9 +83,9 @@ namespace ZenGrantsManager.Controllers
                 HttpResponseMessage Res = await client.GetAsync($"api/Organizations/{id}"); 
                 if (Res.IsSuccessStatusCode)
                 {  
-                    var orgResponse = Res.Content.ReadAsStringAsync().Result; 
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(orgResponse);
-                    return View(organization);
+                    var orgResponse = Res.Content.ReadAsStringAsync().Result;
+                    Organization myorganization = JsonConvert.DeserializeObject<Organization>(orgResponse);
+                    return View(myorganization);
                 }
                 else {
                     this.AddNotification("Unable to display organization information,please contact Administrator" + Res, NotificationType.ERROR);
@@ -190,122 +97,28 @@ namespace ZenGrantsManager.Controllers
         }
 
         // GET: Organizations/Create
-        public async Task<ActionResult> Create()
+        [HttpGet]
+        [SessionTimeout]
+        public ActionResult Create()
         {
             #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    if (!string.IsNullOrEmpty(Session["UserID"].ToString()))
-                    {
-                        userID = (string)(Session["UserID"]);
-
-                    }
-                    else
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
-                    }
-                }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
-
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
             #endregion
-            return View();
+           return View();
         }
 
         // POST: Organizations/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create([Bind(Include = "ID,OrgName,OrgAddress,OrgState,OrgCountry,OrgPhone,OrgEmail,OrgWebsite,CreatedDate,isDeleted,TimeStamp,OrgLogo,UserID")] Organization organization)
         {
             #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    if (!string.IsNullOrEmpty(Session["UserID"].ToString()))
-                    {
-                        userID = (string)(Session["UserID"]);
-
-                    }
-                    else
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
-                    }
-                }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
 
             #endregion
             if (ModelState.IsValid)
@@ -313,6 +126,10 @@ namespace ZenGrantsManager.Controllers
                 organization.UserId = userID;
                 organization.CreatedDate = DateTime.Now;
                 organization.isDeleted = false;
+                //Prepare uploaded Image
+                HttpPostedFileBase file = Request.Files["ImageData"];
+                organization.OrgLogo = ConvertToBytes(file);
+
                 using (var client = new HttpClient())
                 {
                     client.BaseAddress = new Uri(baseurl);
@@ -329,7 +146,6 @@ namespace ZenGrantsManager.Controllers
                     else { this.AddNotification("Organization cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
                         return View();
                     }
-                    //returning the employee list to view  
                     
                 }
             }
@@ -338,60 +154,13 @@ namespace ZenGrantsManager.Controllers
         }
 
         // GET: Organizations/Edit/5
+        [HttpGet]
+        [SessionTimeout]
         public async Task<ActionResult> Edit(int? id)
         {
             #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    if (!string.IsNullOrEmpty(Session["UserID"].ToString()))
-                    {
-                        userID = (string)(Session["UserID"]);
-
-                    }
-                    else
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
-                    }
-                }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
-
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
             #endregion
             if (id == null)
             {
@@ -411,8 +180,8 @@ namespace ZenGrantsManager.Controllers
                 if (Res.IsSuccessStatusCode)
                 {
                     var orgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(orgResponse);
-                    return View(organization);
+                    Organization myorganization = JsonConvert.DeserializeObject<Organization>(orgResponse);
+                    return View(myorganization);
                 }
                 else
                 {
@@ -428,67 +197,16 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        
         public async Task<ActionResult> Edit([Bind(Include = "ID,OrgName,OrgAddress,OrgState,OrgCountry,OrgPhone,OrgEmail,OrgWebsite,CreatedDate,isDeleted,TimeStamp,OrgLogo")] Organization organization)
         {
 
-            #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    if (!string.IsNullOrEmpty(Session["UserID"].ToString()))
-                    {
-                        userID = (string)(Session["UserID"]);
-
-                    }
-                    else
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
-                    }
-                }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
-
-            #endregion
+            
             if (ModelState.IsValid)
             {
-                organization.UserId = userID;
-                organization.CreatedDate = DateTime.Now;
-                organization.isDeleted = false;
+                HttpPostedFileBase file = Request.Files["ImageData"];
+                organization.OrgLogo = ConvertToBytes(file);
+
                 using (var client = new HttpClient())
                 {
                     client.BaseAddress = new Uri(baseurl);
@@ -515,60 +233,13 @@ namespace ZenGrantsManager.Controllers
         }
 
         // GET: Organizations/Delete/5
+        [HttpGet]
+        [SessionTimeout]
         public async Task<ActionResult> Delete(int? id)
         {
             #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    if (!string.IsNullOrEmpty(Session["UserID"].ToString()))
-                    {
-                        userID = (string)(Session["UserID"]);
-
-                    }
-                    else
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
-                    }
-                }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
-
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
             #endregion
             if (id == null)
             {
@@ -585,8 +256,8 @@ namespace ZenGrantsManager.Controllers
                 if (Res.IsSuccessStatusCode)
                 {
                     var orgResponse = Res.Content.ReadAsStringAsync().Result;
-                    organization = JsonConvert.DeserializeObject<List<Organization>>(orgResponse);
-                    return View(organization);
+                    Organization myorganization = JsonConvert.DeserializeObject<Organization>(orgResponse);
+                    return View(myorganization);
                 }
                 else
                 {
@@ -598,62 +269,14 @@ namespace ZenGrantsManager.Controllers
         }
 
         // POST: Organizations/Delete/5
+       
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task <ActionResult> DeleteConfirmed(int id)
         {
             #region USERVALIDATION
-            string token = String.Empty;
-            string userID = String.Empty;
-            if (Session["accessToken"] != null)
-            {
-                if (!string.IsNullOrEmpty(Session["accessToken"].ToString()))
-                {
-                    token = (string)(Session["accessToken"]);
-                    if (!string.IsNullOrEmpty(Session["UserID"].ToString()))
-                    {
-                        userID = (string)(Session["UserID"]);
-
-                    }
-                    else
-                    {
-                        using (var client = new HttpClient())
-                        {
-                            client.BaseAddress = new Uri(baseurl);
-                            client.DefaultRequestHeaders.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                            HttpResponseMessage Res = await client.GetAsync("api/Account/UserInfo");
-                            if (Res.IsSuccessStatusCode)
-                            {
-                                string resultContent = Res.Content.ReadAsStringAsync().Result;
-                                Dictionary<string, string> userDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(resultContent);
-                                string UserID = userDictionary["Userid"];
-                                Session["UserID"] = UserID;
-                            }
-                            else
-                            {
-                                this.AddNotification("Cannot Retrieve user information at this time, Please contact administrator" + Res, NotificationType.ERROR);
-                                return RedirectToAction("index", "Login");
-                            }
-
-                        }
-
-                    }
-                }
-                else
-                {
-                    Session["redirectfrom"] = "Organizations-Index";
-                    return RedirectToAction("index", "Login");
-                }
-            }
-            else
-            {
-                Session["redirectfrom"] = "Organizations-Index";
-                return RedirectToAction("index", "Login");
-            }
-
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
             #endregion
 
             using (var client = new HttpClient())
@@ -673,14 +296,66 @@ namespace ZenGrantsManager.Controllers
                 {
                     this.AddNotification("Organization record cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
                     return View();
-                }
-                //returning the employee list to view  
+                } 
 
             }
         }
 
-     
 
+        public byte[] ConvertToBytes(HttpPostedFileBase image)
+
+        {
+
+            byte[] imageBytes = null;
+
+            BinaryReader reader = new BinaryReader(image.InputStream);
+
+            imageBytes = reader.ReadBytes((int)image.ContentLength);
+
+            return imageBytes;
+
+        }
+
+        public async Task<ActionResult> RetrieveImage(int id)
+
+        {
+
+            byte[] Logo = await GetImageFromDataBase(id);
+
+            if (Logo != null)
+
+            {return File(Logo, "image/jpg");}
+
+            else {   return null;}
+
+        }
+
+        public async Task<byte[]>  GetImageFromDataBase(int Id)
+
+        {
+            List<Organization> organization = new List<Organization>();
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res =  await client.GetAsync($"api/Organizations/{Id}");
+                byte[] Logo = null;
+                if (Res.IsSuccessStatusCode)
+                {
+                    var orgResponse = Res.Content.ReadAsStringAsync().Result;
+                    Organization myorganization = JsonConvert.DeserializeObject<Organization>(orgResponse);
+                    Logo = myorganization.OrgLogo;
+                   
+                }
+                return Logo;
+
+            }
+
+
+
+        }
 
     }
 }

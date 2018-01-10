@@ -1,0 +1,117 @@
+﻿@model IEnumerable<ZenGrantsManager.Models.ProgApplication>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Assessor.AssessorCode)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Organization.OrgName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Programme.ProgrammeName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ApplicantReference)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ApplicantName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ApplicantPhoneNumber)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ApplicantEmailAddress)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ApplicationSummary)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Proposal)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ApplicantPhoto)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.isDeleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TimeStamp)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Applicationscore)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.applicationStatus)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Assessor.AssessorCode)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Organization.OrgName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Programme.ProgrammeName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ApplicantReference)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ApplicantName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ApplicantPhoneNumber)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ApplicantEmailAddress)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ApplicationSummary)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Proposal)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ApplicantPhoto)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CreatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.isDeleted)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TimeStamp)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Applicationscore)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.applicationStatus)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.ID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.ID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.ID })
+        </td>
+    </tr>
+}
+
+</table>

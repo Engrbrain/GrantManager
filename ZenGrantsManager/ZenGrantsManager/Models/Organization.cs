@@ -23,10 +23,8 @@ namespace ZenGrantsManager.Models
         public bool isDeleted { get; set; }
         public DateTime TimeStamp { get; set; }
         public byte[] OrgLogo { get; set; }
-
+        public string ImageType { get; set; }
         public string UserId { get; set; }
-
-       
 
         public Organization()
         {
