@@ -1,49 +1,110 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
 using System.Net;
-using System.Web;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class ProjectActivitiesController : Controller
+    public class ProjectActivitiesController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
 
         // GET: ProjectActivities
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var projectActivities = db.ProjectActivities.Include(p => p.Dependency).Include(p => p.Organization).Include(p => p.Project).Include(p => p.ProjectMeeting).Include(p => p.ProjectTeam);
-            return View(projectActivities.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            List<ProjectActivity> projectActivity = new List<ProjectActivity>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/ProjectActivities");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectActivityResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectActivity = JsonConvert.DeserializeObject<List<ProjectActivity>>(projectActivityResponse);
+                    return View(projectActivity);
+                }
+                else
+                {
+                    this.AddNotification("Project Activity could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(projectActivity);
+                }
+
+            }
         }
 
         // GET: ProjectActivities/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectActivity projectActivity = db.ProjectActivities.Find(id);
-            if (projectActivity == null)
+            List<ProjectActivity> projectActivity = new List<ProjectActivity>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectActivities/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectActivityResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectActivity myProjectActivity = JsonConvert.DeserializeObject<ProjectActivity>(projectActivityResponse);
+                    return View(myProjectActivity);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project Activity information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectActivity);
         }
 
         // GET: ProjectActivities/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.DependencyID = new SelectList(db.ProjectActivities, "ID", "ActivityTitle");
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference");
-            ViewBag.ProjectMeetingID = new SelectList(db.ProjectMeetings, "ID", "MeetingTitle");
-            ViewBag.ProjectTeamID = new SelectList(db.ProjectTeams, "ID", "TeamMemberReference");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            ViewBag.DependencyID = await ProjectActivitySelectList(token);
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.ProjectID = await ProjectSelectList(token);
+            ViewBag.ProjectMeetingID = await ProjectMeetingSelectList(token);
+            ViewBag.ProjectTeamID = await ProjectTeamSelectList(token);
             return View();
         }
 
@@ -52,41 +113,93 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,ActivityTitle,ActivityDescription,ActivityDocumentID,PhoneNumber,Address,StartDate,EndDate,Milestone,Priority,DependencyID,ActivityStatus,ProjectMeetingID,ProjectID,ProjectTeamID,CreatedDate,isDeleted,TimeStamp,OrganizationID")] ProjectActivity projectActivity)
+        public async Task<ActionResult> Create([Bind(Include = "ID,ActivityTitle,ActivityDescription,ActivityDocumentID,PhoneNumber,Address,StartDate,EndDate,Milestone,Priority,DependencyID,ActivityStatus,ProjectMeetingID,ProjectID,ProjectTeamID,CreatedDate,isDeleted,TimeStamp,OrganizationID")] ProjectActivity projectActivity)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (ModelState.IsValid)
             {
-                db.ProjectActivities.Add(projectActivity);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                projectActivity.CreatedDate = DateTime.Now;
+                projectActivity.isDeleted = false;
+                projectActivity.TimeStamp = DateTime.Now;
+
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/ProjectActivities", projectActivity);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("project Activity created successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("project Activity cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
 
-            ViewBag.DependencyID = new SelectList(db.ProjectActivities, "ID", "ActivityTitle", projectActivity.DependencyID);
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectActivity.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectActivity.ProjectID);
-            ViewBag.ProjectMeetingID = new SelectList(db.ProjectMeetings, "ID", "MeetingTitle", projectActivity.ProjectMeetingID);
-            ViewBag.ProjectTeamID = new SelectList(db.ProjectTeams, "ID", "TeamMemberReference", projectActivity.ProjectTeamID);
+            ViewBag.DependencyID = await ProjectActivitySelectListByModel(token, projectActivity.DependencyID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectActivity.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectActivity.ProjectID);
+            ViewBag.ProjectMeetingID = await ProjectMeetingSelectListByModel(token, projectActivity.ProjectMeetingID);
+            ViewBag.ProjectTeamID = await ProjectTeamSelectListByModel(token, projectActivity.ProjectTeamID);
+
             return View(projectActivity);
         }
 
         // GET: ProjectActivities/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectActivity projectActivity = db.ProjectActivities.Find(id);
-            if (projectActivity == null)
+            List<ProjectActivity> projectActivity = new List<ProjectActivity>();
+            ProjectActivity myProjectActivity = new ProjectActivity();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectActivities/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectActivityResponse = Res.Content.ReadAsStringAsync().Result;
+                    myProjectActivity = JsonConvert.DeserializeObject<ProjectActivity>(projectActivityResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project Activity information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.DependencyID = new SelectList(db.ProjectActivities, "ID", "ActivityTitle", projectActivity.DependencyID);
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectActivity.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectActivity.ProjectID);
-            ViewBag.ProjectMeetingID = new SelectList(db.ProjectMeetings, "ID", "MeetingTitle", projectActivity.ProjectMeetingID);
-            ViewBag.ProjectTeamID = new SelectList(db.ProjectTeams, "ID", "TeamMemberReference", projectActivity.ProjectTeamID);
-            return View(projectActivity);
+            ViewBag.DependencyID = await ProjectActivitySelectListByModel(token, myProjectActivity.DependencyID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myProjectActivity.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, myProjectActivity.ProjectID);
+            ViewBag.ProjectMeetingID = await ProjectMeetingSelectListByModel(token, myProjectActivity.ProjectMeetingID);
+            ViewBag.ProjectTeamID = await ProjectTeamSelectListByModel(token, myProjectActivity.ProjectTeamID);
+
+            return View(myProjectActivity);
         }
 
         // POST: ProjectActivities/Edit/5
@@ -94,55 +207,111 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,ActivityTitle,ActivityDescription,ActivityDocumentID,PhoneNumber,Address,StartDate,EndDate,Milestone,Priority,DependencyID,ActivityStatus,ProjectMeetingID,ProjectID,ProjectTeamID,CreatedDate,isDeleted,TimeStamp,OrganizationID")] ProjectActivity projectActivity)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,ActivityTitle,ActivityDescription,ActivityDocumentID,PhoneNumber,Address,StartDate,EndDate,Milestone,Priority,DependencyID,ActivityStatus,ProjectMeetingID,ProjectID,ProjectTeamID,CreatedDate,isDeleted,TimeStamp,OrganizationID")] ProjectActivity projectActivity)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(projectActivity).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/ProjectActivities/{projectActivity.ID}", projectActivity);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Project Activity information modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Project Activity information cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.DependencyID = new SelectList(db.ProjectActivities, "ID", "ActivityTitle", projectActivity.DependencyID);
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectActivity.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectActivity.ProjectID);
-            ViewBag.ProjectMeetingID = new SelectList(db.ProjectMeetings, "ID", "MeetingTitle", projectActivity.ProjectMeetingID);
-            ViewBag.ProjectTeamID = new SelectList(db.ProjectTeams, "ID", "TeamMemberReference", projectActivity.ProjectTeamID);
+
+            ViewBag.DependencyID = await ProjectActivitySelectListByModel(token, projectActivity.DependencyID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectActivity.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectActivity.ProjectID);
+            ViewBag.ProjectMeetingID = await ProjectMeetingSelectListByModel(token, projectActivity.ProjectMeetingID);
+            ViewBag.ProjectTeamID = await ProjectTeamSelectListByModel(token, projectActivity.ProjectTeamID);
             return View(projectActivity);
         }
 
         // GET: ProjectActivities/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectActivity projectActivity = db.ProjectActivities.Find(id);
-            if (projectActivity == null)
+            List<ProjectActivity> projectActivity = new List<ProjectActivity>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectActivities/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectActivityResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectActivity myProjectActivity = JsonConvert.DeserializeObject<ProjectActivity>(projectActivityResponse);
+                    return View(myProjectActivity);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project Activity information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectActivity);
         }
 
         // POST: ProjectActivities/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            ProjectActivity projectActivity = db.ProjectActivities.Find(id);
-            db.ProjectActivities.Remove(projectActivity);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/ProjectActivities/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Project Activity deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Project Activity cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+      
     }
 }

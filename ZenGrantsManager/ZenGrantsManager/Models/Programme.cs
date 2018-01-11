@@ -22,8 +22,6 @@ namespace ZenGrantsManager.Models
         public string ProgrammeDesc { get; set; }
         public DateTime ApplicationStartDate { get; set; }
         public DateTime ApplicationDueDate { get; set; }
-        public int ProposalTemplateID { get; set; }
-        public virtual ProposalTemplate ProposalTemplate { get; set; }
 
         public int OrganizationID { get; set; }
 
@@ -40,7 +38,6 @@ namespace ZenGrantsManager.Models
       
 
         public ICollection<ProgApplication> ProgApplication { get; set; }
-        public ICollection<CustomApplicationDetails> CustomApplicationDetails { get; set; }
         public ICollection<Project> Project { get; set; }
         public ICollection<SelectionCategory> SelectionCategory { get; set; }
     }

@@ -34,12 +34,9 @@ namespace ZenGrantsManager.Models
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.Assessor> Assessors { get; set; }
 
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.BudgetTemplate> BudgetTemplates { get; set; }
-
-        public System.Data.Entity.DbSet<ZenGrantsManager.Models.CustomApplicationDetails> CustomApplicationDetails { get; set; }
-
+        
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.Programme> Programmes { get; set; }
-
-        public System.Data.Entity.DbSet<ZenGrantsManager.Models.ProposalTemplate> ProposalTemplates { get; set; }
+        
 
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.FocusArea> FocusAreas { get; set; }
 

@@ -18,11 +18,11 @@ namespace ZenGrantsManager.Controllers
         List<ProjectActivity> projectactivity = new List<ProjectActivity>();
         List<Organization> organization = new List<Organization>();
         List<ProgApplication> progapplication = new List<ProgApplication>();
-        List<ProposalTemplate> proposalTemplate = new List<ProposalTemplate>();
         List<Programme> programme = new List<Programme>();
         List<Project> project = new List<Project>();
         List<ProjectMeeting> projectMeeting = new List<ProjectMeeting>();
         List<Assessor> assessor = new List<Assessor>();
+        List<ProjectTeam> projectTeam = new List<ProjectTeam>();
 
         public async Task<SelectList> OrganizationSelectList(string token)
         {
@@ -189,45 +189,6 @@ namespace ZenGrantsManager.Controllers
             }
         }
 
-        public async Task<SelectList> ProposalTemplateSelectList(string token)
-        {
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProposalTemplateSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProposalTemplateResponse = Res.Content.ReadAsStringAsync().Result;
-                    proposalTemplate = JsonConvert.DeserializeObject<List<ProposalTemplate>>(ProposalTemplateResponse);
-                    return new SelectList(proposalTemplate, "ID", "FieldLabel");
-                }
-                return new SelectList(proposalTemplate, "ID", "FieldLabel");
-            }
-        }
-        public async Task<SelectList> ProposalTemplateSelectListByModel(string token, object selectedValue)
-        {
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(baseurl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                HttpResponseMessage Res = await client.GetAsync("GetProposalTemplateSelectList");
-                if (Res.IsSuccessStatusCode)
-                {
-                    var ProposalTemplateResponse = Res.Content.ReadAsStringAsync().Result;
-                    proposalTemplate = JsonConvert.DeserializeObject<List<ProposalTemplate>>(ProposalTemplateResponse);
-                    return new SelectList(proposalTemplate, "ID", "FieldLabel", selectedValue);
-                }
-                return new SelectList(proposalTemplate, "ID", "FieldLabel", selectedValue);
-            }
-        }
-
         public async Task<SelectList> ProjectSelectList(string token)
         {
             using (var client = new HttpClient())
@@ -342,6 +303,45 @@ namespace ZenGrantsManager.Controllers
                     return new SelectList(assessor, "ID", "AssessorName", selectedValue);
                 }
                 return new SelectList(assessor, "ID", "AssessorName", selectedValue);
+            }
+        }
+
+        public async Task<SelectList> ProjectTeamSelectList(string token)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetProjectTeamSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var ProjectTeamResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectTeam = JsonConvert.DeserializeObject<List<ProjectTeam>>(ProjectTeamResponse);
+                    return new SelectList(projectTeam, "ID", "Fullname");
+                }
+                return new SelectList(projectTeam, "ID", "Fullname");
+            }
+        }
+        public async Task<SelectList> ProjectTeamSelectListByModel(string token, object selectedValue)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetProjectTeamSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var ProjectTeamResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectTeam = JsonConvert.DeserializeObject<List<ProjectTeam>>(ProjectTeamResponse);
+                    return new SelectList(projectTeam, "ID", "Fullname", selectedValue);
+                }
+                return new SelectList(projectTeam, "ID", "Fullname", selectedValue);
             }
         }
 

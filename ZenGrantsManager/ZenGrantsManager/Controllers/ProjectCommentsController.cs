@@ -1,46 +1,108 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
+using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class ProjectCommentsController : Controller
+    public class ProjectCommentsController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
+        string clientpath = "http://localhost:12953/DocumentManagement/ProjectComments/";
 
         // GET: ProjectComments
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var projectComments = db.ProjectComments.Include(p => p.Organization).Include(p => p.Project);
-            return View(projectComments.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            List<ProjectComment> projectComment = new List<ProjectComment>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/ProjectComments");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectCommentResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectComment = JsonConvert.DeserializeObject<List<ProjectComment>>(projectCommentResponse);
+                    return View(projectComment);
+                }
+                else
+                {
+                    this.AddNotification("Project Comments could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(projectComment);
+                }
+
+            }
         }
 
         // GET: ProjectComments/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectComment projectComment = db.ProjectComments.Find(id);
-            if (projectComment == null)
+            List<ProjectComment> projectComment = new List<ProjectComment>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectComments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectCommentResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectComment myProjectComment = JsonConvert.DeserializeObject<ProjectComment>(projectCommentResponse);
+                    return View(myProjectComment);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project  Comments,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectComment);
         }
 
         // GET: ProjectComments/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.ProjectID = await ProjectSelectList(token);
             return View();
         }
 
@@ -49,35 +111,94 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,CommentTitle,CommentDescription,TagUser,CommentAttachment,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectComment projectComment)
+        public async Task<ActionResult> Create([Bind(Include = "ID,CommentTitle,CommentDescription,LocalFilePath,FileName,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectComment projectComment)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (ModelState.IsValid)
             {
-                db.ProjectComments.Add(projectComment);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                HttpPostedFileBase file = Request.Files["file"];
+                string localfilepath = string.Empty;
+                string filename = string.Empty;
+                if (file.ContentLength > 0)
+                {
+                    var fileName = Path.GetFileName(file.FileName);
+                    var path = Path.Combine(Server.MapPath("~/DocumentManagement/ProjectComments"), fileName);
+                    file.SaveAs(path);
+                    localfilepath = clientpath + fileName;
+                    filename = fileName.ToString();
+                };
+                projectComment.CreatedDate = DateTime.Now;
+                projectComment.isDeleted = false;
+                projectComment.LocalFilePath = localfilepath;
+                projectComment.FileName = filename;
+                projectComment.UserId = userID;
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectComment.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectComment.ProjectID);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/ProjectComments", projectComment);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Comment Posted successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Comment cannot be posted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
+            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectComment.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectComment.ProjectID);
             return View(projectComment);
         }
 
         // GET: ProjectComments/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectComment projectComment = db.ProjectComments.Find(id);
-            if (projectComment == null)
+            List<ProjectComment> projectComment = new List<ProjectComment>();
+            ProjectComment myProjectComment = new ProjectComment();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectComments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectCommentResponse = Res.Content.ReadAsStringAsync().Result;
+                    myProjectComment = JsonConvert.DeserializeObject<ProjectComment>(projectCommentResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Comments,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectComment.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectComment.ProjectID);
-            return View(projectComment);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myProjectComment.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, myProjectComment.ProjectID);
+            return View(myProjectComment);
         }
 
         // POST: ProjectComments/Edit/5
@@ -85,52 +206,106 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,CommentTitle,CommentDescription,TagUser,CommentAttachment,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectComment projectComment)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,CommentTitle,CommentDescription,LocalFilePath,FileName,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectComment projectComment)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(projectComment).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/ProjectComments/{projectComment.ID}", projectComment);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("comment modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("comment cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectComment.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectComment.ProjectID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectComment.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectComment.ProjectID);
             return View(projectComment);
         }
 
         // GET: ProjectComments/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectComment projectComment = db.ProjectComments.Find(id);
-            if (projectComment == null)
+            List<ProjectComment> projectComment = new List<ProjectComment>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectComments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectCommentResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectComment myProjectComment = JsonConvert.DeserializeObject<ProjectComment>(projectCommentResponse);
+                    return View(myProjectComment);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project  Comments,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectComment);
         }
 
         // POST: ProjectComments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            ProjectComment projectComment = db.ProjectComments.Find(id);
-            db.ProjectComments.Remove(projectComment);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/ProjectComments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Comment deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Comment cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+        
     }
 }

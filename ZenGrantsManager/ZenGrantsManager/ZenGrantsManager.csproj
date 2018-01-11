@@ -173,7 +173,6 @@
     <Compile Include="Controllers\ApplicationDocumentsController.cs" />
     <Compile Include="Controllers\AssessorsController.cs" />
     <Compile Include="Controllers\BudgetTemplatesController.cs" />
-    <Compile Include="Controllers\CustomApplicationDetailsController.cs" />
     <Compile Include="Controllers\FocusAreasController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\Landing\LandingController.cs" />
@@ -194,7 +193,6 @@
     <Compile Include="Controllers\ProjectTemplatesController.cs" />
     <Compile Include="Controllers\ProjectTransactionHeadersController.cs" />
     <Compile Include="Controllers\ProjectTransactionLinesController.cs" />
-    <Compile Include="Controllers\ProposalTemplatesController.cs" />
     <Compile Include="Controllers\RenewalsController.cs" />
     <Compile Include="Controllers\SelectionAnswersController.cs" />
     <Compile Include="Controllers\SelectionCategoriesController.cs" />
@@ -214,7 +212,6 @@
     <Compile Include="Models\ApplicationDocument.cs" />
     <Compile Include="Models\Assessor.cs" />
     <Compile Include="Models\BudgetTemplate.cs" />
-    <Compile Include="Models\CustomApplicationDetails.cs" />
     <Compile Include="Models\enumManager.cs" />
     <Compile Include="Models\FocusArea.cs" />
     <Compile Include="Models\Login.cs" />
@@ -233,7 +230,6 @@
     <Compile Include="Models\ProjectTemplate.cs" />
     <Compile Include="Models\ProjectTransactionHeader.cs" />
     <Compile Include="Models\ProjectTransactionLine.cs" />
-    <Compile Include="Models\ProposalTemplate.cs" />
     <Compile Include="Models\Register.cs" />
     <Compile Include="Models\Organization.cs" />
     <Compile Include="Models\Renewal.cs" />
@@ -1941,7 +1937,10 @@
   <ItemGroup>
     <Folder Include="App_Data\uploads\" />
     <Folder Include="DocumentManagement\ApplicationDocument\" />
+    <Folder Include="DocumentManagement\ProjectActivityComments\" />
     <Folder Include="DocumentManagement\ProjectActivityDocument\" />
+    <Folder Include="DocumentManagement\ProjectComments\" />
+    <Folder Include="DocumentManagement\ProjectDocument\" />
     <Folder Include="Views\ManageUsers\" />
     <Folder Include="Views\mybase\" />
     <Folder Include="Views\utility\" />

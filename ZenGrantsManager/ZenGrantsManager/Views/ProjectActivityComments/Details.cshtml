@@ -42,20 +42,13 @@
             @Html.DisplayFor(model => model.CommentDescription)
         </dd>
 
+       
         <dt>
-            @Html.DisplayNameFor(model => model.TagUser)
+           Attachment
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.TagUser)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.CommentAttachment)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.CommentAttachment)
+            <a href="@Html.Raw(Model.LocalFilePath)">Download Document</a>
         </dd>
 
         <dt>

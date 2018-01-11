@@ -14,8 +14,9 @@ namespace ZenGrantsManager.Models
         public int ID { get; set; }
         public string DocumentName { get; set; }
         public string DocumentDescription { get; set; }
-        public byte[] DocumentFile { get; set; }
-       
+        public string LocalFilePath { get; set; }
+        public string FileName { get; set; }
+
         public int OrganizationID { get; set; }
         public virtual Organization Organization { get; set; }
         public int ProjectID { get; set; }

@@ -1,46 +1,109 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
+using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
+
 
 namespace ZenGrantsManager.Controllers
 {
-    public class ProjectDocumentsController : Controller
+    public class ProjectDocumentsController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
+        string clientpath = "http://localhost:12953/DocumentManagement/ProjectDocument/";
 
         // GET: ProjectDocuments
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var projectDocuments = db.ProjectDocuments.Include(p => p.Organization).Include(p => p.Project);
-            return View(projectDocuments.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            List<ProjectDocument> projectDocument = new List<ProjectDocument>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/ProjectDocuments");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectDocumentResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectDocument = JsonConvert.DeserializeObject<List<ProjectDocument>>(projectDocumentResponse);
+                    return View(projectDocument);
+                }
+                else
+                {
+                    this.AddNotification("Project Document could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(projectDocument);
+                }
+
+            }
         }
 
         // GET: ProjectDocuments/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectDocument projectDocument = db.ProjectDocuments.Find(id);
-            if (projectDocument == null)
+            List<ProjectDocument> projectDocument = new List<ProjectDocument>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectDocuments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectDocumentResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectDocument myProjectDocument = JsonConvert.DeserializeObject<ProjectDocument>(projectDocumentResponse);
+                    return View(myProjectDocument);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project Documents,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectDocument);
         }
 
         // GET: ProjectDocuments/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.ProjectID = await ProjectSelectList(token);
             return View();
         }
 
@@ -49,35 +112,94 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,DocumentName,DocumentDescription,DocumentFile,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectDocument projectDocument)
+        public async Task<ActionResult> Create([Bind(Include = "ID,DocumentName,DocumentDescription,LocalFilePath,FileName,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectDocument projectDocument)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (ModelState.IsValid)
             {
-                db.ProjectDocuments.Add(projectDocument);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                HttpPostedFileBase file = Request.Files["file"];
+                string localfilepath = string.Empty;
+                string filename = string.Empty;
+                if (file.ContentLength > 0)
+                {
+                    var fileName = Path.GetFileName(file.FileName);
+                    var path = Path.Combine(Server.MapPath("~/DocumentManagement/ProjectDocument"), fileName);
+                    file.SaveAs(path);
+                    localfilepath = clientpath + fileName;
+                    filename = fileName.ToString();
+                };
+                projectDocument.CreatedDate = DateTime.Now;
+                projectDocument.isDeleted = false;
+                projectDocument.LocalFilePath = localfilepath;
+                projectDocument.FileName = filename;
+                projectDocument.UserId = userID;
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectDocument.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectDocument.ProjectID);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/ProjectDocuments", projectDocument);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Comment Posted successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Comment cannot be posted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
+            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectDocument.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectDocument.ProjectID);
             return View(projectDocument);
         }
 
         // GET: ProjectDocuments/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectDocument projectDocument = db.ProjectDocuments.Find(id);
-            if (projectDocument == null)
+            List<ProjectDocument> projectDocument = new List<ProjectDocument>();
+            ProjectDocument myProjectDocument = new ProjectDocument();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectDocuments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectDocumentResponse = Res.Content.ReadAsStringAsync().Result;
+                    myProjectDocument = JsonConvert.DeserializeObject<ProjectDocument>(projectDocumentResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Documents,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectDocument.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectDocument.ProjectID);
-            return View(projectDocument);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myProjectDocument.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, myProjectDocument.ProjectID);
+            return View(myProjectDocument);
         }
 
         // POST: ProjectDocuments/Edit/5
@@ -85,52 +207,105 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,DocumentName,DocumentDescription,DocumentFile,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectDocument projectDocument)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,DocumentName,DocumentDescription,LocalFilePath,FileName,OrganizationID,ProjectID,CreatedDate,isDeleted,TimeStamp,UserId")] ProjectDocument projectDocument)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(projectDocument).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/ProjectDocuments/{projectDocument.ID}", projectDocument);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Documents modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Documents cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectDocument.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectDocument.ProjectID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectDocument.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectDocument.ProjectID);
             return View(projectDocument);
         }
 
         // GET: ProjectDocuments/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectDocument projectDocument = db.ProjectDocuments.Find(id);
-            if (projectDocument == null)
+            List<ProjectDocument> projectDocument = new List<ProjectDocument>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectDocuments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectDocumentResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectDocument myProjectDocument = JsonConvert.DeserializeObject<ProjectDocument>(projectDocumentResponse);
+                    return View(myProjectDocument);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project Documents,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectDocument);
         }
 
         // POST: ProjectDocuments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            ProjectDocument projectDocument = db.ProjectDocuments.Find(id);
-            db.ProjectDocuments.Remove(projectDocument);
-            db.SaveChanges();
-            return RedirectToAction("Index");
-        }
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
+            using (var client = new HttpClient())
             {
-                db.Dispose();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/ProjectDocuments/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Document deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Document cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            base.Dispose(disposing);
         }
+        
     }
 }

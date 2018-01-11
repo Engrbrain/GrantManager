@@ -15,8 +15,8 @@ namespace ZenGrantsManager.Models
         public int ID { get; set; }
         public string CommentTitle { get; set; }
         public string CommentDescription { get; set; }
-        public string TagUser { get; set; }
-        public byte[] CommentAttachment { get; set; }
+        public string LocalFilePath { get; set; }
+        public string FileName { get; set; }
         public int ProjectActivityID { get; set; }
         public virtual ProjectActivity ProjectActivity { get; set; }
         public int OrganizationID { get; set; }

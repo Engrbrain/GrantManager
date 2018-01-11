@@ -39,8 +39,7 @@ namespace ZenGrantsManager.Models
         {
             TimeStamp = DateTime.Now;
         }
-
-        public ICollection<CustomApplicationDetails> CustomApplicationDetails { get; set; }
+        
         public ICollection<ApplicationDocument> ApplicationDocuments { get; set; }
         public ICollection<SelectionAnswer> SelectionAnswer { get; set; }
         public ICollection<Project> Project { get; set; }

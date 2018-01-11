@@ -96,6 +96,10 @@ namespace ZenGrantsManager.Controllers
         [SessionTimeout]
         public async Task<ActionResult> Create()
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             ViewBag.OrganizationID = await OrganizationSelectList(token);
             ViewBag.ProjectID = await ProjectSelectList(token);
             ViewBag.ProjectMeetingID = await ProjectMeetingSelectList(token);
