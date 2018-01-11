@@ -1,46 +1,107 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
 using System.Net;
-using System.Web;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class RenewalsController : Controller
+    public class RenewalsController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
 
         // GET: Renewals
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var renewals = db.Renewals.Include(r => r.Organization).Include(r => r.Subscription);
-            return View(renewals.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            List<Renewal> renewal = new List<Renewal>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/Renewals");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var RenewalsResponse = Res.Content.ReadAsStringAsync().Result;
+                    renewal = JsonConvert.DeserializeObject<List<Renewal>>(RenewalsResponse);
+                    return View(renewal);
+                }
+                else
+                {
+                    this.AddNotification("Renewals could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(renewal);
+                }
+
+            }
         }
 
         // GET: Renewals/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Renewal renewal = db.Renewals.Find(id);
-            if (renewal == null)
+            List<Renewal> renewal = new List<Renewal>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Renewals/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var RenewalResponse = Res.Content.ReadAsStringAsync().Result;
+                    Renewal myRenewal = JsonConvert.DeserializeObject<Renewal>(RenewalResponse);
+                    return View(myRenewal);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Renewals information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(renewal);
         }
 
         // GET: Renewals/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
-            ViewBag.SubscriptionID = new SelectList(db.Subscriptions, "ID", "UserId");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.SubscriptionID = await SubscriptionSelectList(token);
+
             return View();
         }
 
@@ -49,35 +110,85 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,OrganizationID,SubscriptionID,InvoiceNumber,PaymentReference,Status,PaymentMethod,Narration,PostingDate,ExpiryDate,RenewalAmount,isActive,TimeStamp,UserId")] Renewal renewal)
+        public async Task<ActionResult> Create([Bind(Include = "ID,RenewalCode,RenewalName,RenewalEmail,RenewalPassword,OrganizationID,CreatedDate,isDeleted,TimeStamp")] Renewal renewal)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (ModelState.IsValid)
             {
-                db.Renewals.Add(renewal);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                renewal.UserId = userID;
+                renewal.TimeStamp = DateTime.Now;
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", renewal.OrganizationID);
-            ViewBag.SubscriptionID = new SelectList(db.Subscriptions, "ID", "UserId", renewal.SubscriptionID);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/Renewals", renewal);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Renewal created successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Renewal cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
+            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, renewal.OrganizationID);
+            ViewBag.SubscriptionID = await SubscriptionSelectListByModel(token, renewal.SubscriptionID);
             return View(renewal);
         }
 
         // GET: Renewals/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Renewal renewal = db.Renewals.Find(id);
-            if (renewal == null)
+            List<Renewal> renewal = new List<Renewal>();
+            Renewal myRenewal = new Renewal();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Renewals/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var RenewalResponse = Res.Content.ReadAsStringAsync().Result;
+                    myRenewal = JsonConvert.DeserializeObject<Renewal>(RenewalResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Renewals information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", renewal.OrganizationID);
-            ViewBag.SubscriptionID = new SelectList(db.Subscriptions, "ID", "UserId", renewal.SubscriptionID);
-            return View(renewal);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myRenewal.OrganizationID);
+            ViewBag.SubscriptionID = await SubscriptionSelectListByModel(token, myRenewal.SubscriptionID);
+
+            return View(myRenewal);
+
         }
 
         // POST: Renewals/Edit/5
@@ -85,52 +196,106 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,OrganizationID,SubscriptionID,InvoiceNumber,PaymentReference,Status,PaymentMethod,Narration,PostingDate,ExpiryDate,RenewalAmount,isActive,TimeStamp,UserId")] Renewal renewal)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,RenewalCode,RenewalName,RenewalEmail,RenewalPassword,OrganizationID,CreatedDate,isDeleted,TimeStamp")] Renewal renewal)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(renewal).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/Renewals/{renewal.ID}", renewal);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Renewals information modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Renewals information cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", renewal.OrganizationID);
-            ViewBag.SubscriptionID = new SelectList(db.Subscriptions, "ID", "UserId", renewal.SubscriptionID);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, renewal.OrganizationID);
+            ViewBag.SubscriptionID = await SubscriptionSelectListByModel(token, renewal.SubscriptionID);
             return View(renewal);
         }
 
         // GET: Renewals/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Renewal renewal = db.Renewals.Find(id);
-            if (renewal == null)
+            List<Renewal> renewal = new List<Renewal>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Renewals/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var RenewalResponse = Res.Content.ReadAsStringAsync().Result;
+                    Renewal myRenewal = JsonConvert.DeserializeObject<Renewal>(RenewalResponse);
+                    return View(myRenewal);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Renewals information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(renewal);
         }
 
         // POST: Renewals/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Renewal renewal = db.Renewals.Find(id);
-            db.Renewals.Remove(renewal);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/Renewals/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Renewals deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Renewals  cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
     }
 }

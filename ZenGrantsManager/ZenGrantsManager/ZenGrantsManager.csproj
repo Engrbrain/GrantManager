@@ -1913,11 +1913,6 @@
     <Content Include="Views\Renewals\Details.cshtml" />
     <Content Include="Views\Renewals\Edit.cshtml" />
     <Content Include="Views\Renewals\Index.cshtml" />
-    <Content Include="Views\SelectionAnswers\Create.cshtml" />
-    <Content Include="Views\SelectionAnswers\Delete.cshtml" />
-    <Content Include="Views\SelectionAnswers\Details.cshtml" />
-    <Content Include="Views\SelectionAnswers\Edit.cshtml" />
-    <Content Include="Views\SelectionAnswers\Index.cshtml" />
     <Content Include="Views\SelectionCategories\Create.cshtml" />
     <Content Include="Views\SelectionCategories\Delete.cshtml" />
     <Content Include="Views\SelectionCategories\Details.cshtml" />
@@ -1933,6 +1928,11 @@
     <Content Include="Views\Subscriptions\Details.cshtml" />
     <Content Include="Views\Subscriptions\Edit.cshtml" />
     <Content Include="Views\Subscriptions\Index.cshtml" />
+    <Content Include="Views\SelectionAnswers\Create.cshtml" />
+    <Content Include="Views\SelectionAnswers\Delete.cshtml" />
+    <Content Include="Views\SelectionAnswers\Details.cshtml" />
+    <Content Include="Views\SelectionAnswers\Edit.cshtml" />
+    <Content Include="Views\SelectionAnswers\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\uploads\" />
@@ -1941,6 +1941,8 @@
     <Folder Include="DocumentManagement\ProjectActivityDocument\" />
     <Folder Include="DocumentManagement\ProjectComments\" />
     <Folder Include="DocumentManagement\ProjectDocument\" />
+    <Folder Include="DocumentManagement\ProjectRisk\" />
+    <Folder Include="DocumentManagement\ProjectTransactions\" />
     <Folder Include="Views\ManageUsers\" />
     <Folder Include="Views\mybase\" />
     <Folder Include="Views\utility\" />

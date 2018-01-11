@@ -1,45 +1,107 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
 using System.Net;
-using System.Web;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class SelectionCategoriesController : Controller
+    public class SelectionCategoriesController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
 
         // GET: SelectionCategories
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var selectionCategories = db.SelectionCategories.Include(s => s.Organization);
-            return View(selectionCategories.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            List<SelectionCategory> selectionCategory = new List<SelectionCategory>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/SelectionCategories");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionCategoriesResponse = Res.Content.ReadAsStringAsync().Result;
+                    selectionCategory = JsonConvert.DeserializeObject<List<SelectionCategory>>(SelectionCategoriesResponse);
+                    return View(selectionCategory);
+                }
+                else
+                {
+                    this.AddNotification("SelectionCategories could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(selectionCategory);
+                }
+
+            }
         }
 
         // GET: SelectionCategories/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            SelectionCategory selectionCategory = db.SelectionCategories.Find(id);
-            if (selectionCategory == null)
+            List<SelectionCategory> selectionCategory = new List<SelectionCategory>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/SelectionCategories/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionCategoryResponse = Res.Content.ReadAsStringAsync().Result;
+                    SelectionCategory mySelectionCategory = JsonConvert.DeserializeObject<SelectionCategory>(SelectionCategoryResponse);
+                    return View(mySelectionCategory);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display SelectionCategories information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(selectionCategory);
         }
 
         // GET: SelectionCategories/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+           
+
             return View();
         }
 
@@ -48,33 +110,85 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,CategoryName,CategoryDescription,CategoryWeight,OrganizationID,CreatedDate,isDeleted,TimeStamp")] SelectionCategory selectionCategory)
+        public async Task<ActionResult> Create([Bind(Include = "ID,SelectionQuestionID,AssessorID,ProgApplicationID,AssignedScore,CreatedDate,isDeleted,TimeStamp,OrganizationID")] SelectionCategory selectionCategory)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (ModelState.IsValid)
             {
-                db.SelectionCategories.Add(selectionCategory);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                selectionCategory.CreatedDate = DateTime.Now;
+                selectionCategory.isDeleted = false;
+                selectionCategory.TimeStamp = DateTime.Now;
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", selectionCategory.OrganizationID);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/SelectionCategories", selectionCategory);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("SelectionCategory created successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("SelectionCategory cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
+            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, selectionCategory.OrganizationID);
+           
             return View(selectionCategory);
         }
 
         // GET: SelectionCategories/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            SelectionCategory selectionCategory = db.SelectionCategories.Find(id);
-            if (selectionCategory == null)
+            List<SelectionCategory> selectionCategory = new List<SelectionCategory>();
+            SelectionCategory mySelectionCategory = new SelectionCategory();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/SelectionCategories/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionCategoryResponse = Res.Content.ReadAsStringAsync().Result;
+                    mySelectionCategory = JsonConvert.DeserializeObject<SelectionCategory>(SelectionCategoryResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display SelectionCategories information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", selectionCategory.OrganizationID);
-            return View(selectionCategory);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, mySelectionCategory.OrganizationID);
+           
+            return View(mySelectionCategory);
+
         }
 
         // POST: SelectionCategories/Edit/5
@@ -82,51 +196,106 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,CategoryName,CategoryDescription,CategoryWeight,OrganizationID,CreatedDate,isDeleted,TimeStamp")] SelectionCategory selectionCategory)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,SelectionQuestionID,AssessorID,ProgApplicationID,AssignedScore,CreatedDate,isDeleted,TimeStamp,OrganizationID")] SelectionCategory selectionCategory)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(selectionCategory).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/SelectionCategories/{selectionCategory.ID}", selectionCategory);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("SelectionCategories information modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("SelectionCategories information cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", selectionCategory.OrganizationID);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, selectionCategory.OrganizationID);
+           
             return View(selectionCategory);
         }
 
         // GET: SelectionCategories/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            SelectionCategory selectionCategory = db.SelectionCategories.Find(id);
-            if (selectionCategory == null)
+            List<SelectionCategory> selectionCategory = new List<SelectionCategory>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/SelectionCategories/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionCategoryResponse = Res.Content.ReadAsStringAsync().Result;
+                    SelectionCategory mySelectionCategory = JsonConvert.DeserializeObject<SelectionCategory>(SelectionCategoryResponse);
+                    return View(mySelectionCategory);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display SelectionCategories information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(selectionCategory);
         }
 
         // POST: SelectionCategories/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            SelectionCategory selectionCategory = db.SelectionCategories.Find(id);
-            db.SelectionCategories.Remove(selectionCategory);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/SelectionCategories/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("SelectionCategories deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("SelectionCategories  cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
     }
 }

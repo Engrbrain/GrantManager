@@ -1,47 +1,114 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
+using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class ProjectsController : Controller
+    public class ProjectsController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
 
         // GET: Projects
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var projects = db.Projects.Include(p => p.Organization).Include(p => p.ProgApplication).Include(p => p.Programme);
-            return View(projects.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+
+            List<Project> project = new List<Project>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/Projects");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectResponse = Res.Content.ReadAsStringAsync().Result;
+                    project = JsonConvert.DeserializeObject<List<Project>>(projectResponse);
+                    return View(project);
+                }
+                else
+                {
+                    this.AddNotification("Project  could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(project);
+                }
+
+            }
+
         }
 
         // GET: Projects/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Project project = db.Projects.Find(id);
-            if (project == null)
+            List<Project> project = new List<Project>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Projects/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectResponse = Res.Content.ReadAsStringAsync().Result;
+                    Project myProject = JsonConvert.DeserializeObject<Project>(projectResponse);
+                    return View(myProject);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project  information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(project);
         }
 
         // GET: Projects/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
-            ViewBag.ProgApplicationID = new SelectList(db.ProgApplications, "ID", "ApplicantReference");
-            ViewBag.ProgrammeID = new SelectList(db.Programmes, "ID", "ProgrammeName");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectList(token);
+            ViewBag.ProgrammeID = await ProgrammeSelectList(token);
+
             return View();
         }
 
@@ -50,37 +117,92 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,ProjectReference,ProjectName,ProjectDescription,ProgrammeDesc,ProjectStartDate,ProjectDueDate,ProjectContigencyPeriod,AmountAllocated,BalanceAmount,ProjectStatus,OrganizationID,ProgApplicationID,ProgrammeID,CreatedDate,isDeleted,TimeStamp,ProjectLogo")] Project project)
+        public async Task<ActionResult> Create([Bind(Include = "ID,ProjectReference,ProjectName,ProjectDescription,ProgrammeDesc,ProjectStartDate,ProjectDueDate,ProjectContigencyPeriod,AmountAllocated,BalanceAmount,ProjectStatus,OrganizationID,ProgApplicationID,ProgrammeID,CreatedDate,isDeleted,TimeStamp,ProjectLogo")] Project project)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (ModelState.IsValid)
             {
-                db.Projects.Add(project);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                project.CreatedDate = DateTime.Now;
+                project.isDeleted = false;
+                project.TimeStamp = DateTime.Now;
+                HttpPostedFileBase file = Request.Files["ImageData"];
+                project.ProjectLogo = ConvertToBytes(file);
+
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/Projects", project);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Project  created successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Project  cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", project.OrganizationID);
-            ViewBag.ProgApplicationID = new SelectList(db.ProgApplications, "ID", "ApplicantReference", project.ProgApplicationID);
-            ViewBag.ProgrammeID = new SelectList(db.Programmes, "ID", "ProgrammeName", project.ProgrammeID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, project.OrganizationID);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectListByModel(token, project.ProgApplicationID);
+            ViewBag.ProgrammeID = await ProgrammeSelectListByModel(token, project.ProgrammeID);
+
+          
+
             return View(project);
         }
 
         // GET: Projects/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Project project = db.Projects.Find(id);
-            if (project == null)
+            List<Project> project = new List<Project>();
+            Project myProject = new Project();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Projects/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectResponse = Res.Content.ReadAsStringAsync().Result;
+                    myProject = JsonConvert.DeserializeObject<Project>(projectResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project  information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", project.OrganizationID);
-            ViewBag.ProgApplicationID = new SelectList(db.ProgApplications, "ID", "ApplicantReference", project.ProgApplicationID);
-            ViewBag.ProgrammeID = new SelectList(db.Programmes, "ID", "ProgrammeName", project.ProgrammeID);
-            return View(project);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myProject.OrganizationID);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectListByModel(token, myProject.ProgApplicationID);
+            ViewBag.ProgrammeID = await ProgrammeSelectListByModel(token, myProject.ProgrammeID);
+            return View(myProject);
         }
 
         // POST: Projects/Edit/5
@@ -88,53 +210,162 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,ProjectReference,ProjectName,ProjectDescription,ProgrammeDesc,ProjectStartDate,ProjectDueDate,ProjectContigencyPeriod,AmountAllocated,BalanceAmount,ProjectStatus,OrganizationID,ProgApplicationID,ProgrammeID,CreatedDate,isDeleted,TimeStamp,ProjectLogo")] Project project)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,ProjectReference,ProjectName,ProjectDescription,ProgrammeDesc,ProjectStartDate,ProjectDueDate,ProjectContigencyPeriod,AmountAllocated,BalanceAmount,ProjectStatus,OrganizationID,ProgApplicationID,ProgrammeID,CreatedDate,isDeleted,TimeStamp,ProjectLogo")] Project project)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(project).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/Projects/{project.ID}", project);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Project  information modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Project  information cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", project.OrganizationID);
-            ViewBag.ProgApplicationID = new SelectList(db.ProgApplications, "ID", "ApplicantReference", project.ProgApplicationID);
-            ViewBag.ProgrammeID = new SelectList(db.Programmes, "ID", "ProgrammeName", project.ProgrammeID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, project.OrganizationID);
+            ViewBag.ProgApplicationID = await ProgApplicationSelectListByModel(token, project.ProgApplicationID);
+            ViewBag.ProgrammeID = await ProgrammeSelectListByModel(token, project.ProgrammeID);
+
             return View(project);
         }
 
         // GET: Projects/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Project project = db.Projects.Find(id);
-            if (project == null)
+            List<Project> project = new List<Project>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Projects/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectResponse = Res.Content.ReadAsStringAsync().Result;
+                    Project myProject = JsonConvert.DeserializeObject<Project>(projectResponse);
+                    return View(myProject);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project  information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(project);
         }
 
         // POST: Projects/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Project project = db.Projects.Find(id);
-            db.Projects.Remove(project);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/Projects/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Project  deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Project  cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
+        public byte[] ConvertToBytes(HttpPostedFileBase image)
+
         {
-            if (disposing)
+
+            byte[] imageBytes = null;
+
+            BinaryReader reader = new BinaryReader(image.InputStream);
+
+            imageBytes = reader.ReadBytes((int)image.ContentLength);
+
+            return imageBytes;
+
+        }
+
+        public async Task<ActionResult> RetrieveImage(int id)
+
+        {
+
+            byte[] Logo = await GetImageFromDataBase(id);
+
+            if (Logo != null)
+
+            { return File(Logo, "image/jpg"); }
+
+            else { return null; }
+
+        }
+
+        public async Task<byte[]> GetImageFromDataBase(int Id)
+
+        {
+            List<Organization> organization = new List<Organization>();
+            using (var client = new HttpClient())
             {
-                db.Dispose();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Projects/{Id}");
+                byte[] Logo = null;
+                if (Res.IsSuccessStatusCode)
+                {
+                    var orgResponse = Res.Content.ReadAsStringAsync().Result;
+                    Organization myorganization = JsonConvert.DeserializeObject<Organization>(orgResponse);
+                    Logo = myorganization.OrgLogo;
+
+                }
+                return Logo;
+
             }
-            base.Dispose(disposing);
+
+
+
         }
     }
 }

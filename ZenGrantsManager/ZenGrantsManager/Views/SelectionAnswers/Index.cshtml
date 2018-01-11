@@ -12,6 +12,9 @@
 <table class="table">
     <tr>
         <th>
+            @Html.DisplayNameFor(model => model.Assessor.AssessorCode)
+        </th>
+        <th>
             @Html.DisplayNameFor(model => model.Organization.OrgName)
         </th>
         <th>
@@ -19,9 +22,6 @@
         </th>
         <th>
             @Html.DisplayNameFor(model => model.SelectionQuestion.Question)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.AssesorID)
         </th>
         <th>
             @Html.DisplayNameFor(model => model.AssignedScore)
@@ -41,6 +41,9 @@
 @foreach (var item in Model) {
     <tr>
         <td>
+            @Html.DisplayFor(modelItem => item.Assessor.AssessorCode)
+        </td>
+        <td>
             @Html.DisplayFor(modelItem => item.Organization.OrgName)
         </td>
         <td>
@@ -48,9 +51,6 @@
         </td>
         <td>
             @Html.DisplayFor(modelItem => item.SelectionQuestion.Question)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.AssesorID)
         </td>
         <td>
             @Html.DisplayFor(modelItem => item.AssignedScore)

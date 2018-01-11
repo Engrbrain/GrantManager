@@ -15,7 +15,7 @@ namespace ZenGrantsManager.Models
         public int ID { get; set; }
         public enumManager.subType subType { get; set; }
         public int OrganizationID { get; set; }
-
+        public string SubscriptionDescription { get; set; }
         public virtual Organization Organization { get; set; }
         
         public DateTime CreatedDate { get; set; }

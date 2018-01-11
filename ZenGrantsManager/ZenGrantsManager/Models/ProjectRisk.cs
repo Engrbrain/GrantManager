@@ -17,7 +17,8 @@ namespace ZenGrantsManager.Models
         public string RiskDescription { get; set; }
         public string RiskMitigation { get; set; }
         public enumManager.RiskStatus RiskStatus { get; set; }
-        public byte[] RiskDocument { get; set; }
+        public string LocalFilePath { get; set; }
+        public string FileName { get; set; }
 
         public int ProjectID { get; set; }
         public virtual Project Project { get; set; }

@@ -18,6 +18,8 @@ namespace ZenGrantsManager.Models
         public string ShortText { get; set; }
         public int FiscalYear { get; set; }
         public int Period { get; set; }
+        public string LocalFilePath { get; set; }
+        public string FileName { get; set; }
         public DateTime TransactionDate { get; set; }
         public DateTime EntryDate { get; set; }
         public double TotalAmount { get; set; }

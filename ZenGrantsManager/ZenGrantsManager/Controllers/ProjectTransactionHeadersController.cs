@@ -1,47 +1,114 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
+using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class ProjectTransactionHeadersController : Controller
+    public class ProjectTransactionHeadersController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
+        string clientpath = "http://localhost:12953/DocumentManagement/ProjectTransactions/";
 
         // GET: ProjectTransactionHeaders
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var projectTransactionHeaders = db.ProjectTransactionHeaders.Include(p => p.Organization).Include(p => p.Project).Include(p => p.ProjectBudget);
-            return View(projectTransactionHeaders.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+
+            List<ProjectTransactionHeader> projectTransactionHeader = new List<ProjectTransactionHeader>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/ProjectTransactionHeaders");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectTransactionHeaderResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectTransactionHeader = JsonConvert.DeserializeObject<List<ProjectTransactionHeader>>(projectTransactionHeaderResponse);
+                    return View(projectTransactionHeader);
+                }
+                else
+                {
+                    this.AddNotification("Project TransactionHeader could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(projectTransactionHeader);
+                }
+
+            }
+
         }
 
         // GET: ProjectTransactionHeaders/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectTransactionHeader projectTransactionHeader = db.ProjectTransactionHeaders.Find(id);
-            if (projectTransactionHeader == null)
+            List<ProjectTransactionHeader> projectTransactionHeader = new List<ProjectTransactionHeader>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectTransactionHeaders/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectTransactionHeaderResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectTransactionHeader myProjectTransactionHeader = JsonConvert.DeserializeObject<ProjectTransactionHeader>(projectTransactionHeaderResponse);
+                    return View(myProjectTransactionHeader);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project TransactionHeader information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectTransactionHeader);
         }
 
         // GET: ProjectTransactionHeaders/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference");
-            ViewBag.ProjectBudgetID = new SelectList(db.ProjectBudgets, "ID", "BudgetItem");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+            ViewBag.ProjectID = await ProjectSelectList(token);
+            ViewBag.ProjectBudgetID = await ProjectBudgetSelectList(token);
             return View();
         }
 
@@ -50,37 +117,104 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,ProjectBudgetID,TransactionRef,ShortText,FiscalYear,Period,TransactionDate,EntryDate,TotalAmount,CreatedDate,isDeleted,TimeStamp,OrganizationID,ProjectID,UserId")] ProjectTransactionHeader projectTransactionHeader)
+        public async Task<ActionResult> Create([Bind(Include = "ID,ProjectBudgetID,TransactionRef,ShortText,LocalFilePath,FileName,FiscalYear,Period,TransactionDate,EntryDate,TotalAmount,CreatedDate, isDeleted,TimeStamp,OrganizationID,ProjectID,UserId")] ProjectTransactionHeader projectTransactionHeader)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (ModelState.IsValid)
             {
-                db.ProjectTransactionHeaders.Add(projectTransactionHeader);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                HttpPostedFileBase file = Request.Files["file"];
+                string localfilepath = string.Empty;
+                string filename = string.Empty;
+                if (file.ContentLength > 0)
+                {
+                    var fileName = Path.GetFileName(file.FileName);
+                    var path = Path.Combine(Server.MapPath("~/DocumentManagement/ProjectTransactions"), fileName);
+                    file.SaveAs(path);
+                    localfilepath = clientpath + fileName;
+                    filename = fileName.ToString();
+                };
+
+                projectTransactionHeader.CreatedDate = DateTime.Now;
+                projectTransactionHeader.isDeleted = false;
+                projectTransactionHeader.TimeStamp = DateTime.Now;
+                projectTransactionHeader.UserId = userID;
+                projectTransactionHeader.LocalFilePath = localfilepath;
+                projectTransactionHeader.FileName = filename;
+
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/ProjectTransactionHeaderss", projectTransactionHeader);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Project TransactionHeader created successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Project TransactionHeader cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectTransactionHeader.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectTransactionHeader.ProjectID);
-            ViewBag.ProjectBudgetID = new SelectList(db.ProjectBudgets, "ID", "BudgetItem", projectTransactionHeader.ProjectBudgetID);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectTransactionHeader.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectTransactionHeader.ProjectID);
+            ViewBag.ProjectBudgetID = await ProjectBudgetSelectListByModel(token, projectTransactionHeader.ProjectBudgetID);
+
             return View(projectTransactionHeader);
         }
 
         // GET: ProjectTransactionHeaders/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectTransactionHeader projectTransactionHeader = db.ProjectTransactionHeaders.Find(id);
-            if (projectTransactionHeader == null)
+            List<ProjectTransactionHeader> projectTransactionHeader = new List<ProjectTransactionHeader>();
+            ProjectTransactionHeader myProjectTransactionHeader = new ProjectTransactionHeader();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectTransactionHeaders/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectTransactionHeaderResponse = Res.Content.ReadAsStringAsync().Result;
+                    myProjectTransactionHeader = JsonConvert.DeserializeObject<ProjectTransactionHeader>(projectTransactionHeaderResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project TransactionHeader information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectTransactionHeader.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectTransactionHeader.ProjectID);
-            ViewBag.ProjectBudgetID = new SelectList(db.ProjectBudgets, "ID", "BudgetItem", projectTransactionHeader.ProjectBudgetID);
-            return View(projectTransactionHeader);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, myProjectTransactionHeader.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, myProjectTransactionHeader.ProjectID);
+            ViewBag.ProjectBudgetID = await ProjectBudgetSelectListByModel(token, myProjectTransactionHeader.ProjectBudgetID);
+            return View(myProjectTransactionHeader);
         }
 
         // POST: ProjectTransactionHeaders/Edit/5
@@ -88,53 +222,108 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,ProjectBudgetID,TransactionRef,ShortText,FiscalYear,Period,TransactionDate,EntryDate,TotalAmount,CreatedDate,isDeleted,TimeStamp,OrganizationID,ProjectID,UserId")] ProjectTransactionHeader projectTransactionHeader)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,ProjectBudgetID,TransactionRef,ShortText,LocalFilePath,FileName,FiscalYear,Period,TransactionDate,EntryDate,TotalAmount,CreatedDate, isDeleted,TimeStamp,OrganizationID,ProjectID,UserId")] ProjectTransactionHeader projectTransactionHeader)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(projectTransactionHeader).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/ProjectTransactionHeaders/{projectTransactionHeader.ID}", projectTransactionHeader);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Project TransactionHeader information modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Project TransactionHeader information cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", projectTransactionHeader.OrganizationID);
-            ViewBag.ProjectID = new SelectList(db.Projects, "ID", "ProjectReference", projectTransactionHeader.ProjectID);
-            ViewBag.ProjectBudgetID = new SelectList(db.ProjectBudgets, "ID", "BudgetItem", projectTransactionHeader.ProjectBudgetID);
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, projectTransactionHeader.OrganizationID);
+            ViewBag.ProjectID = await ProjectSelectListByModel(token, projectTransactionHeader.ProjectID);
+            ViewBag.ProjectBudgetID = await ProjectBudgetSelectListByModel(token, projectTransactionHeader.ProjectBudgetID);
+
             return View(projectTransactionHeader);
         }
 
         // GET: ProjectTransactionHeaders/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            ProjectTransactionHeader projectTransactionHeader = db.ProjectTransactionHeaders.Find(id);
-            if (projectTransactionHeader == null)
+            List<ProjectTransactionHeader> projectTransactionHeader = new List<ProjectTransactionHeader>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/ProjectTransactionHeaders/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var projectTransactionHeaderResponse = Res.Content.ReadAsStringAsync().Result;
+                    ProjectTransactionHeader myProjectTransactionHeader = JsonConvert.DeserializeObject<ProjectTransactionHeader>(projectTransactionHeaderResponse);
+                    return View(myProjectTransactionHeader);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Project TransactionHeader information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(projectTransactionHeader);
         }
 
         // POST: ProjectTransactionHeaders/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            ProjectTransactionHeader projectTransactionHeader = db.ProjectTransactionHeaders.Find(id);
-            db.ProjectTransactionHeaders.Remove(projectTransactionHeader);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/ProjectTransactionHeaders/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Project TransactionHeader deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Project TransactionHeader cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
     }
 }

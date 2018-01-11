@@ -67,11 +67,12 @@ namespace ZenGrantsManager.Models
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.Renewal> Renewals { get; set; }
 
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.Subscription> Subscriptions { get; set; }
-
-        public System.Data.Entity.DbSet<ZenGrantsManager.Models.SelectionAnswer> SelectionAnswers { get; set; }
+        
 
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.SelectionQuestion> SelectionQuestions { get; set; }
 
         public System.Data.Entity.DbSet<ZenGrantsManager.Models.SelectionCategory> SelectionCategories { get; set; }
+
+        public System.Data.Entity.DbSet<ZenGrantsManager.Models.SelectionAnswer> SelectionAnswers { get; set; }
     }
 }

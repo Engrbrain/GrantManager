@@ -23,6 +23,10 @@ namespace ZenGrantsManager.Controllers
         List<ProjectMeeting> projectMeeting = new List<ProjectMeeting>();
         List<Assessor> assessor = new List<Assessor>();
         List<ProjectTeam> projectTeam = new List<ProjectTeam>();
+        List<ProjectBudget> projectBudget = new List<ProjectBudget>();
+        List<Subscription> subscription = new List<Subscription>();
+        List<SelectionQuestion> selectionQuestion = new List<SelectionQuestion>();
+        List<SelectionCategory> selectionCategory = new List<SelectionCategory>();
 
         public async Task<SelectList> OrganizationSelectList(string token)
         {
@@ -342,6 +346,163 @@ namespace ZenGrantsManager.Controllers
                     return new SelectList(projectTeam, "ID", "Fullname", selectedValue);
                 }
                 return new SelectList(projectTeam, "ID", "Fullname", selectedValue);
+            }
+        }
+
+
+        public async Task<SelectList> ProjectBudgetSelectList(string token)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetProjectBudgetSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var ProjectBudgetResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectBudget = JsonConvert.DeserializeObject<List<ProjectBudget>>(ProjectBudgetResponse);
+                    return new SelectList(projectBudget, "ID", "BudgetItem");
+                }
+                return new SelectList(projectBudget, "ID", "BudgetItem");
+            }
+        }
+        public async Task<SelectList> ProjectBudgetSelectListByModel(string token, object selectedValue)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetProjectBudgetSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var ProjectBudgetResponse = Res.Content.ReadAsStringAsync().Result;
+                    projectBudget = JsonConvert.DeserializeObject<List<ProjectBudget>>(ProjectBudgetResponse);
+                    return new SelectList(projectBudget, "ID", "BudgetItem", selectedValue);
+                }
+                return new SelectList(projectBudget, "ID", "BudgetItem", selectedValue);
+            }
+        }
+
+        public async Task<SelectList> SubscriptionSelectList(string token)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetSubscriptionSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SubscriptionResponse = Res.Content.ReadAsStringAsync().Result;
+                    subscription = JsonConvert.DeserializeObject<List<Subscription>>(SubscriptionResponse);
+                    return new SelectList(subscription, "ID", "SubscriptionDescription");
+                }
+                return new SelectList(subscription, "ID", "SubscriptionDescription");
+            }
+        }
+        public async Task<SelectList> SubscriptionSelectListByModel(string token, object selectedValue)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetSubscriptionSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SubscriptionResponse = Res.Content.ReadAsStringAsync().Result;
+                    subscription = JsonConvert.DeserializeObject<List<Subscription>>(SubscriptionResponse);
+                    return new SelectList(subscription, "ID", "SubscriptionDescription", selectedValue);
+                }
+                return new SelectList(subscription, "ID", "SubscriptionDescription", selectedValue);
+            }
+        }
+
+        public async Task<SelectList> SelectionQuestionSelectList(string token)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetSelectionQuestionSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionQuestionResponse = Res.Content.ReadAsStringAsync().Result;
+                    selectionQuestion = JsonConvert.DeserializeObject<List<SelectionQuestion>>(SelectionQuestionResponse);
+                    return new SelectList(selectionQuestion, "ID", "Question");
+                }
+                return new SelectList(selectionQuestion, "ID", "Question");
+            }
+        }
+        public async Task<SelectList> SelectionQuestionSelectListByModel(string token, object selectedValue)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetSelectionQuestionSelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionQuestionResponse = Res.Content.ReadAsStringAsync().Result;
+                    selectionQuestion = JsonConvert.DeserializeObject<List<SelectionQuestion>>(SelectionQuestionResponse);
+                    return new SelectList(selectionQuestion, "ID", "Question", selectedValue);
+                }
+                return new SelectList(selectionQuestion, "ID", "Question", selectedValue);
+            }
+        }
+
+        public async Task<SelectList> SelectionCategorySelectList(string token)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetSelectionCategorySelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionCategoryResponse = Res.Content.ReadAsStringAsync().Result;
+                    selectionCategory = JsonConvert.DeserializeObject<List<SelectionCategory>>(SelectionCategoryResponse);
+                    return new SelectList(selectionCategory, "ID", "CategoryName");
+                }
+                return new SelectList(selectionCategory, "ID", "CategoryName");
+            }
+        }
+        public async Task<SelectList> SelectionCategorySelectListByModel(string token, object selectedValue)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("GetSelectionCategorySelectList");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SelectionCategoryResponse = Res.Content.ReadAsStringAsync().Result;
+                    selectionCategory = JsonConvert.DeserializeObject<List<SelectionCategory>>(SelectionCategoryResponse);
+                    return new SelectList(selectionCategory, "ID", "CategoryName", selectedValue);
+                }
+                return new SelectList(selectionCategory, "ID", "CategoryName", selectedValue);
             }
         }
 

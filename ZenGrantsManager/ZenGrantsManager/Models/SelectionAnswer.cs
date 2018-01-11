@@ -14,7 +14,7 @@ namespace ZenGrantsManager.Models
         public int ID { get; set; }
         public int SelectionQuestionID { get; set; }
         public virtual SelectionQuestion SelectionQuestion { get; set; }
-        public int AssesorID { get; set; }
+        public int AssessorID { get; set; }
         public virtual Assessor Assessor { get; set; }
         public int ProgApplicationID { get; set; }
         public virtual ProgApplication ProgApplication { get; set; }

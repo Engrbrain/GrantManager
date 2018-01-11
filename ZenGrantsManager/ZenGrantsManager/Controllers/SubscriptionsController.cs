@@ -1,45 +1,107 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
 using System.Net;
-using System.Web;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web.Mvc;
+using ZenGrantsManager.Extensions;
 using ZenGrantsManager.Models;
 
 namespace ZenGrantsManager.Controllers
 {
-    public class SubscriptionsController : Controller
+    public class SubscriptionsController : mybaseController
     {
-        private ZenGrantsManagerContext db = new ZenGrantsManagerContext();
+        public string token = String.Empty;
+        public string userID = String.Empty;
+        string baseurl = System.Configuration.ConfigurationManager.AppSettings["baseurl"].ToString();
 
         // GET: Subscriptions
-        public ActionResult Index()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Index()
         {
-            var subscriptions = db.Subscriptions.Include(s => s.Organization);
-            return View(subscriptions.ToList());
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            List<Subscription> subscription = new List<Subscription>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage Res = await client.GetAsync("api/Subscriptions");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SubscriptionsResponse = Res.Content.ReadAsStringAsync().Result;
+                    subscription = JsonConvert.DeserializeObject<List<Subscription>>(SubscriptionsResponse);
+                    return View(subscription);
+                }
+                else
+                {
+                    this.AddNotification("Subscriptions could not be displayed at this time, Please contact administrator" + Res, NotificationType.ERROR);
+                    return View(subscription);
+                }
+
+            }
         }
 
         // GET: Subscriptions/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Details(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Subscription subscription = db.Subscriptions.Find(id);
-            if (subscription == null)
+            List<Subscription> subscription = new List<Subscription>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Subscriptions/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SubscriptionResponse = Res.Content.ReadAsStringAsync().Result;
+                    Subscription mySubscription = JsonConvert.DeserializeObject<Subscription>(SubscriptionResponse);
+                    return View(mySubscription);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Subscriptions information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(subscription);
         }
 
         // GET: Subscriptions/Create
-        public ActionResult Create()
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Create()
         {
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+            ViewBag.OrganizationID = await OrganizationSelectList(token);
+
+
             return View();
         }
 
@@ -48,33 +110,84 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,subType,OrganizationID,CreatedDate,NextExpiryDate,LastRenewalDate,isActive,TimeStamp,UserId")] Subscription subscription)
+        public async Task<ActionResult> Create([Bind(Include = "ID,subType,SubscriptionDescription,OrganizationID,CreatedDate,NextExpiryDate,LastRenewalDate,isActive,TimeStamp,UserId")] Subscription subscription)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (ModelState.IsValid)
             {
-                db.Subscriptions.Add(subscription);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                subscription.CreatedDate = DateTime.Now;
+                subscription.TimeStamp = DateTime.Now;
 
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", subscription.OrganizationID);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    HttpResponseMessage Res = await client.PostAsJsonAsync("api/Subscriptions", subscription);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Subscription created successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Subscription cannot be created at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
+            }
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, subscription.OrganizationID);
+
             return View(subscription);
         }
 
         // GET: Subscriptions/Edit/5
-        public ActionResult Edit(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Edit(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Subscription subscription = db.Subscriptions.Find(id);
-            if (subscription == null)
+            List<Subscription> subscription = new List<Subscription>();
+            Subscription mySubscription = new Subscription();
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Subscriptions/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SubscriptionResponse = Res.Content.ReadAsStringAsync().Result;
+                    mySubscription = JsonConvert.DeserializeObject<Subscription>(SubscriptionResponse);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Subscriptions information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", subscription.OrganizationID);
-            return View(subscription);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, mySubscription.OrganizationID);
+
+            return View(mySubscription);
+
         }
 
         // POST: Subscriptions/Edit/5
@@ -82,51 +195,106 @@ namespace ZenGrantsManager.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,subType,OrganizationID,CreatedDate,NextExpiryDate,LastRenewalDate,isActive,TimeStamp,UserId")] Subscription subscription)
+        public async Task<ActionResult> Edit([Bind(Include = "ID,subType,SubscriptionDescription,OrganizationID,CreatedDate,NextExpiryDate,LastRenewalDate,isActive,TimeStamp,UserId")] Subscription subscription)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(subscription).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(baseurl);
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    HttpResponseMessage Res = await client.PutAsJsonAsync($"api/Subscriptions/{subscription.ID}", subscription);
+                    if (Res.IsSuccessStatusCode)
+                    {
+                        this.AddNotification("Subscriptions information modified successfully", NotificationType.SUCCESS);
+                        return RedirectToAction("Index");
+
+                    }
+                    else
+                    {
+                        this.AddNotification("Subscriptions information cannot be modified at this time. Please contact Administrator", NotificationType.ERROR);
+                        return View();
+                    }
+
+                }
             }
-            ViewBag.OrganizationID = new SelectList(db.Organizations, "ID", "OrgName", subscription.OrganizationID);
+
+            ViewBag.OrganizationID = await OrganizationSelectListByModel(token, subscription.OrganizationID);
+
             return View(subscription);
         }
 
         // GET: Subscriptions/Delete/5
-        public ActionResult Delete(int? id)
+        [HttpGet]
+        [SessionTimeout]
+        public async Task<ActionResult> Delete(int? id)
         {
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Subscription subscription = db.Subscriptions.Find(id);
-            if (subscription == null)
+            List<Subscription> subscription = new List<Subscription>();
+
+
+            using (var client = new HttpClient())
             {
-                return HttpNotFound();
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.GetAsync($"api/Subscriptions/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    var SubscriptionResponse = Res.Content.ReadAsStringAsync().Result;
+                    Subscription mySubscription = JsonConvert.DeserializeObject<Subscription>(SubscriptionResponse);
+                    return View(mySubscription);
+                }
+                else
+                {
+                    this.AddNotification("Unable to display Subscriptions information,please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
             }
-            return View(subscription);
         }
 
         // POST: Subscriptions/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Subscription subscription = db.Subscriptions.Find(id);
-            db.Subscriptions.Remove(subscription);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            #region USERVALIDATION
+            token = (string)(Session["accessToken"]);
+            string userID = (string)(Session["UserID"]);
+            #endregion
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(baseurl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage Res = await client.DeleteAsync($"api/Subscriptions/{id}");
+                if (Res.IsSuccessStatusCode)
+                {
+                    this.AddNotification("Subscriptions deleted successfully", NotificationType.SUCCESS);
+                    return RedirectToAction("Index");
+
+                }
+                else
+                {
+                    this.AddNotification("Subscriptions  cannot be deleted at this time. Please contact Administrator" + Res, NotificationType.ERROR);
+                    return View();
+                }
+
+            }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
     }
 }
